@@ -1,61 +1,68 @@
 @import "tailwindcss";
 
 :root {
-  /* Base colors */
+  /* === LIGHT THEME: White & Red Harmony === */
+  
+  /* Base - Clean whites */
   --background: #ffffff;
-  --foreground: #0f172a;
+  --foreground: #1a1a1a;
   
-  /* Card and surface colors */
+  /* Cards - Pure white with subtle depth */
   --card: #ffffff;
-  --card-foreground: #0f172a;
+  --card-foreground: #1a1a1a;
   
-  /* Muted/secondary backgrounds */
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
+  /* Muted - Warm light grays */
+  --muted: #f5f5f5;
+  --muted-foreground: #737373;
   
-  /* Primary brand color - Red */
+  /* Primary - Bold Red */
   --primary: #dc2626;
   --primary-foreground: #ffffff;
   --primary-hover: #b91c1c;
+  --primary-light: #fef2f2;
   
-  /* Secondary - Neutral elegant */
-  --secondary: #f1f5f9;
-  --secondary-foreground: #334155;
-  --secondary-hover: #e2e8f0;
+  /* Secondary - Elegant neutral */
+  --secondary: #f5f5f5;
+  --secondary-foreground: #404040;
+  --secondary-hover: #e5e5e5;
   
-  /* Accent */
-  --accent: #fee2e2;
-  --accent-foreground: #991b1b;
+  /* Accent - Subtle red tint */
+  --accent: #fef2f2;
+  --accent-foreground: #dc2626;
   
-  /* Borders */
-  --border: #e2e8f0;
-  --input: #e2e8f0;
+  /* Destructive */
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  
+  /* Borders - Subtle definition */
+  --border: #e5e5e5;
+  --input: #e5e5e5;
   --ring: #dc2626;
   
-  /* Status colors with translucency */
-  --success: rgba(34, 197, 94, 0.15);
+  /* Status colors - Translucent */
+  --success: rgba(22, 163, 74, 0.12);
   --success-foreground: #15803d;
-  --success-border: rgba(34, 197, 94, 0.3);
+  --success-border: rgba(22, 163, 74, 0.25);
   
-  --error: rgba(239, 68, 68, 0.15);
+  --error: rgba(220, 38, 38, 0.12);
   --error-foreground: #dc2626;
-  --error-border: rgba(239, 68, 68, 0.3);
+  --error-border: rgba(220, 38, 38, 0.25);
   
-  --warning: rgba(245, 158, 11, 0.15);
-  --warning-foreground: #b45309;
-  --warning-border: rgba(245, 158, 11, 0.3);
+  --warning: rgba(234, 179, 8, 0.12);
+  --warning-foreground: #a16207;
+  --warning-border: rgba(234, 179, 8, 0.25);
   
-  --info: rgba(59, 130, 246, 0.15);
+  --info: rgba(37, 99, 235, 0.12);
   --info-foreground: #1d4ed8;
-  --info-border: rgba(59, 130, 246, 0.3);
+  --info-border: rgba(37, 99, 235, 0.25);
   
-  /* Sidebar */
-  --sidebar: #0f172a;
-  --sidebar-foreground: #e2e8f0;
-  --sidebar-muted: #1e293b;
+  /* Sidebar - Dark slate for contrast */
+  --sidebar: #1a1a1a;
+  --sidebar-foreground: #fafafa;
+  --sidebar-muted: #262626;
   --sidebar-accent: #dc2626;
   
-  /* Header */
+  /* Header - Bold red brand */
   --header: #dc2626;
   --header-foreground: #ffffff;
   
@@ -64,61 +71,68 @@
 }
 
 .dark {
-  /* Base colors */
+  /* === DARK THEME: Black & Red Harmony === */
+  
+  /* Base - Deep blacks */
   --background: #0a0a0a;
-  --foreground: #f8fafc;
+  --foreground: #fafafa;
   
-  /* Card and surface colors */
-  --card: #18181b;
-  --card-foreground: #f8fafc;
+  /* Cards - Rich dark surface */
+  --card: #171717;
+  --card-foreground: #fafafa;
   
-  /* Muted/secondary backgrounds */
-  --muted: #27272a;
-  --muted-foreground: #a1a1aa;
+  /* Muted - Dark grays */
+  --muted: #262626;
+  --muted-foreground: #a3a3a3;
   
-  /* Primary brand color - Red */
+  /* Primary - Vibrant Red */
   --primary: #ef4444;
   --primary-foreground: #ffffff;
   --primary-hover: #dc2626;
+  --primary-light: rgba(239, 68, 68, 0.15);
   
-  /* Secondary - Neutral elegant */
-  --secondary: #27272a;
-  --secondary-foreground: #e4e4e7;
-  --secondary-hover: #3f3f46;
+  /* Secondary - Dark neutral */
+  --secondary: #262626;
+  --secondary-foreground: #e5e5e5;
+  --secondary-hover: #404040;
   
-  /* Accent */
-  --accent: #450a0a;
-  --accent-foreground: #fca5a5;
+  /* Accent - Deep red glow */
+  --accent: rgba(239, 68, 68, 0.15);
+  --accent-foreground: #f87171;
   
-  /* Borders */
-  --border: #27272a;
-  --input: #27272a;
+  /* Destructive */
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  
+  /* Borders - Subtle dark lines */
+  --border: #262626;
+  --input: #262626;
   --ring: #ef4444;
   
-  /* Status colors with translucency */
-  --success: rgba(34, 197, 94, 0.2);
+  /* Status colors - Translucent for dark */
+  --success: rgba(34, 197, 94, 0.15);
   --success-foreground: #4ade80;
-  --success-border: rgba(34, 197, 94, 0.4);
+  --success-border: rgba(34, 197, 94, 0.3);
   
-  --error: rgba(239, 68, 68, 0.2);
+  --error: rgba(239, 68, 68, 0.15);
   --error-foreground: #f87171;
-  --error-border: rgba(239, 68, 68, 0.4);
+  --error-border: rgba(239, 68, 68, 0.3);
   
-  --warning: rgba(245, 158, 11, 0.2);
-  --warning-foreground: #fbbf24;
-  --warning-border: rgba(245, 158, 11, 0.4);
+  --warning: rgba(250, 204, 21, 0.15);
+  --warning-foreground: #facc15;
+  --warning-border: rgba(250, 204, 21, 0.3);
   
-  --info: rgba(59, 130, 246, 0.2);
+  --info: rgba(59, 130, 246, 0.15);
   --info-foreground: #60a5fa;
-  --info-border: rgba(59, 130, 246, 0.4);
+  --info-border: rgba(59, 130, 246, 0.3);
   
-  /* Sidebar */
+  /* Sidebar - Pure black */
   --sidebar: #0a0a0a;
-  --sidebar-foreground: #e4e4e7;
-  --sidebar-muted: #18181b;
+  --sidebar-foreground: #fafafa;
+  --sidebar-muted: #171717;
   --sidebar-accent: #ef4444;
   
-  /* Header */
+  /* Header - Red on dark */
   --header: #dc2626;
   --header-foreground: #ffffff;
 }
@@ -133,11 +147,14 @@
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-hover: var(--primary-hover);
+  --color-primary-light: var(--primary-light);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-secondary-hover: var(--secondary-hover);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -179,8 +196,8 @@ body {
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -189,15 +206,41 @@ body {
 
 ::-webkit-scrollbar-thumb {
   background: var(--muted-foreground);
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--foreground);
 }
 
+.dark ::-webkit-scrollbar-track {
+  background: var(--sidebar-muted);
+}
+
 /* Focus styles */
 *:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+/* Red accent underlines for active states */
+.accent-underline {
+  position: relative;
+}
+
+.accent-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--primary);
+  border-radius: 1px;
 }
