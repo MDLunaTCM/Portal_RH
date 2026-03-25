@@ -1,26 +1,246 @@
 @import "tailwindcss";
 
 :root {
+  /* === LIGHT THEME: White & Red Harmony === */
+  
+  /* Base - Clean whites */
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #1a1a1a;
+  
+  /* Cards - Pure white with subtle depth */
+  --card: #ffffff;
+  --card-foreground: #1a1a1a;
+  
+  /* Muted - Warm light grays */
+  --muted: #f5f5f5;
+  --muted-foreground: #737373;
+  
+  /* Primary - Bold Red */
+  --primary: #dc2626;
+  --primary-foreground: #ffffff;
+  --primary-hover: #b91c1c;
+  --primary-light: #fef2f2;
+  
+  /* Secondary - Elegant neutral */
+  --secondary: #f5f5f5;
+  --secondary-foreground: #404040;
+  --secondary-hover: #e5e5e5;
+  
+  /* Accent - Subtle red tint */
+  --accent: #fef2f2;
+  --accent-foreground: #dc2626;
+  
+  /* Destructive */
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  
+  /* Borders - Subtle definition */
+  --border: #e5e5e5;
+  --input: #e5e5e5;
+  --ring: #dc2626;
+  
+  /* Status colors - Translucent */
+  --success: rgba(22, 163, 74, 0.12);
+  --success-foreground: #15803d;
+  --success-border: rgba(22, 163, 74, 0.25);
+  
+  --error: rgba(220, 38, 38, 0.12);
+  --error-foreground: #dc2626;
+  --error-border: rgba(220, 38, 38, 0.25);
+  
+  --warning: rgba(234, 179, 8, 0.12);
+  --warning-foreground: #a16207;
+  --warning-border: rgba(234, 179, 8, 0.25);
+  
+  --info: rgba(37, 99, 235, 0.12);
+  --info-foreground: #1d4ed8;
+  --info-border: rgba(37, 99, 235, 0.25);
+  
+  /* Sidebar - Dark slate for contrast */
+  --sidebar: #1a1a1a;
+  --sidebar-foreground: #fafafa;
+  --sidebar-muted: #262626;
+  --sidebar-accent: #dc2626;
+  
+  /* Header - Bold red brand */
+  --header: #dc2626;
+  --header-foreground: #ffffff;
+  
+  /* Radius */
+  --radius: 0.5rem;
+}
+
+.dark {
+  /* === DARK THEME: Black & Red Harmony === */
+  
+  /* Base - Deep blacks */
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  
+  /* Cards - Rich dark surface */
+  --card: #171717;
+  --card-foreground: #fafafa;
+  
+  /* Muted - Dark grays */
+  --muted: #262626;
+  --muted-foreground: #a3a3a3;
+  
+  /* Primary - Vibrant Red */
+  --primary: #ef4444;
+  --primary-foreground: #ffffff;
+  --primary-hover: #dc2626;
+  --primary-light: rgba(239, 68, 68, 0.15);
+  
+  /* Secondary - Dark neutral */
+  --secondary: #262626;
+  --secondary-foreground: #e5e5e5;
+  --secondary-hover: #404040;
+  
+  /* Accent - Deep red glow */
+  --accent: rgba(239, 68, 68, 0.15);
+  --accent-foreground: #f87171;
+  
+  /* Destructive */
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  
+  /* Borders - Subtle dark lines */
+  --border: #262626;
+  --input: #262626;
+  --ring: #ef4444;
+  
+  /* Status colors - Translucent for dark */
+  --success: rgba(34, 197, 94, 0.15);
+  --success-foreground: #4ade80;
+  --success-border: rgba(34, 197, 94, 0.3);
+  
+  --error: rgba(239, 68, 68, 0.15);
+  --error-foreground: #f87171;
+  --error-border: rgba(239, 68, 68, 0.3);
+  
+  --warning: rgba(250, 204, 21, 0.15);
+  --warning-foreground: #facc15;
+  --warning-border: rgba(250, 204, 21, 0.3);
+  
+  --info: rgba(59, 130, 246, 0.15);
+  --info-foreground: #60a5fa;
+  --info-border: rgba(59, 130, 246, 0.3);
+  
+  /* Sidebar - Pure black */
+  --sidebar: #0a0a0a;
+  --sidebar-foreground: #fafafa;
+  --sidebar-muted: #171717;
+  --sidebar-accent: #ef4444;
+  
+  /* Header - Red on dark */
+  --header: #dc2626;
+  --header-foreground: #ffffff;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-light: var(--primary-light);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary-hover: var(--secondary-hover);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-border: var(--success-border);
+  --color-error: var(--error);
+  --color-error-foreground: var(--error-foreground);
+  --color-error-border: var(--error-border);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-border: var(--warning-border);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-border: var(--info-border);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-header: var(--header);
+  --color-header-foreground: var(--header-foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --radius-sm: calc(var(--radius) - 0.25rem);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 0.25rem);
+  --radius-xl: calc(var(--radius) + 0.5rem);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--border);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--muted);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground);
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: var(--sidebar-muted);
+}
+
+/* Focus styles */
+*:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+/* Red accent underlines for active states */
+.accent-underline {
+  position: relative;
+}
+
+.accent-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--primary);
+  border-radius: 1px;
 }
