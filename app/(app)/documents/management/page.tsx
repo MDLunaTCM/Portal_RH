@@ -624,7 +624,7 @@ export default function DocumentManagementPage() {
                     <div className="flex items-center gap-3 self-end sm:self-center shrink-0">
                       <StatusBadge status={doc.status} />
                       <Button
-                        variant={doc.status === "pending_review" ? "default" : "outline"}
+                        variant={doc.status === "pending_review" ? "primary" : "outline"}
                         size="sm"
                         onClick={() => setSelectedDoc(doc)}
                       >
