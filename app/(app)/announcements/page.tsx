@@ -58,7 +58,7 @@ function isExpiringSoon(expiresAt: string | null): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// Loading skeleton
+// Loading skeleton (Feed style)
 // ---------------------------------------------------------------------------
 
 function BoardSkeleton() {
@@ -70,23 +70,14 @@ function BoardSkeleton() {
         <Skeleton className="h-10 w-44" />
       </div>
 
-      {/* Featured post skeleton */}
-      <div className="rounded-lg border border-border p-8 space-y-4">
-        <Skeleton className="h-8 w-40" />
-        <Skeleton className="h-6 w-3/4" />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Skeleton className="h-40" />
-          <Skeleton className="h-40" />
-        </div>
-      </div>
-
-      {/* Grid skeleton */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="rounded-lg border border-border overflow-hidden space-y-3">
-            <Skeleton className="h-6 w-full" />
+      {/* Feed skeleton - vertical stack */}
+      <div className="space-y-4 max-w-2xl mx-auto w-full">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="rounded-lg border border-border overflow-hidden space-y-4 p-4">
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
             <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-4 w-28 mx-4" />
           </div>
         ))}
       </div>
@@ -156,11 +147,11 @@ export default function AnnouncementsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Page header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Tablón de Anuncios</h1>
-          <p className="text-muted-foreground">
+      {/* Page header - centered for feed layout */}
+      <div className="flex flex-col items-center text-center gap-2 max-w-2xl mx-auto w-full">
+        <div className="w-full">
+          <h1 className="text-3xl font-bold text-foreground">Tablón de Anuncios</h1>
+          <p className="text-muted-foreground mt-1">
             Comunicados y avisos publicados por Recursos Humanos.
           </p>
         </div>
@@ -175,9 +166,9 @@ export default function AnnouncementsPage() {
 
       {!error && (
         <>
-          {/* Filters */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative flex-1 min-w-[180px]">
+          {/* Filters - centered */}
+          <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3 max-w-2xl mx-auto w-full">
+            <div className="relative flex-1 min-w-[200px] sm:min-w-[250px]">
               <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               <Input
                 value={search}
@@ -206,7 +197,7 @@ export default function AnnouncementsPage() {
             )}
           </div>
 
-          {/* Featured Post + Grid */}
+          {/* Facebook-style Vertical Feed */}
           {filtered.length === 0 ? (
             <EmptyState
               icon={<IconInbox className="w-10 h-10" />}
@@ -229,32 +220,14 @@ export default function AnnouncementsPage() {
               }
             />
           ) : (
-            <div className="space-y-8">
-              {/* Featured post: pinned announcement with highest priority */}
-              {filtered[0]?.pinned && (
-                <FeaturedPostBanner
-                  announcement={filtered[0]}
-                  onViewDetails={() => setSelected(filtered[0])}
+            <div className="max-w-2xl mx-auto w-full space-y-4">
+              {filtered.map((a) => (
+                <FeedPost
+                  key={a.id}
+                  announcement={a}
+                  onClick={() => setSelected(a)}
                 />
-              )}
-
-              {/* Feed grid */}
-              <div>
-                {filtered[0]?.pinned && (
-                  <h3 className="text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wide">
-                    Más anuncios
-                  </h3>
-                )}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {(filtered[0]?.pinned ? filtered.slice(1) : filtered).map((a) => (
-                    <FeedPost
-                      key={a.id}
-                      announcement={a}
-                      onClick={() => setSelected(a)}
-                    />
-                  ))}
-                </div>
-              </div>
+              ))}
             </div>
           )}
         </>
