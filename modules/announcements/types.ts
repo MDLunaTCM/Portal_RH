@@ -1,6 +1,18 @@
 import type { UserRole, PublishStatus } from "@/types";
 
 // ---------------------------------------------------------------------------
+// Media Types (MVP-light: images + video embeds)
+// ---------------------------------------------------------------------------
+
+export interface AnnouncementMedia {
+  id: string;
+  type: "image" | "video";
+  url: string;
+  alt?: string;
+  thumbnail_url?: string; // For videos, to show preview
+}
+
+// ---------------------------------------------------------------------------
 // Announcements (maps to `announcements` table — TASK-003)
 // ---------------------------------------------------------------------------
 
@@ -20,6 +32,10 @@ export interface Announcement {
   created_by: string;
   created_at: string;
   updated_at: string;
+  // NEW: Media & visual enhancements
+  featured_image_url?: string;
+  featured_image_alt?: string;
+  media?: AnnouncementMedia[];
 }
 
 // ---------------------------------------------------------------------------
@@ -33,4 +49,8 @@ export interface AnnouncementFormValues {
   audience: UserRole[];
   expires_at?: string;
   publish_immediately: boolean;
+  // NEW: Media fields
+  featured_image_url?: string;
+  featured_image_alt?: string;
+  media?: AnnouncementMedia[];
 }
