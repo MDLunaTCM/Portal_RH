@@ -20,6 +20,17 @@ export interface BoardAnnouncement {
   publishedAt: string;
   expiresAt: string | null;
   createdAt: string;
+  // NEW: Media & priority support
+  priority?: "normal" | "important" | "urgent";
+  featured_image_url?: string;
+  featured_image_alt?: string;
+  media?: Array<{
+    id: string;
+    type: "image" | "video";
+    url: string;
+    alt?: string;
+    thumbnail_url?: string;
+  }>;
 }
 
 // ---------------------------------------------------------------------------

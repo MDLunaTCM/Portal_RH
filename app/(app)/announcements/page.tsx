@@ -12,9 +12,7 @@ import {
 } from "@/components/ui";
 import { Select, Modal } from "@/components/ui/shared";
 import {
-  IconMegaphone,
   IconSearch,
-  IconCalendar,
   IconAlertCircle,
   IconInbox,
   IconBell,
@@ -24,6 +22,8 @@ import {
   useAnnouncementsBoard,
   type BoardAnnouncement,
 } from "@/modules/announcements/hooks/use-announcements-board";
+import { FeedPost } from "@/components/announcements/FeedPost";
+import { FeaturedPostBanner } from "@/components/announcements/FeaturedPostBanner";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -58,74 +58,35 @@ function isExpiringSoon(expiresAt: string | null): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// AnnouncementCard
-// ---------------------------------------------------------------------------
-
-function AnnouncementCard({
-  announcement,
-  onClick,
-}: {
-  announcement: BoardAnnouncement;
-  onClick: () => void;
-}) {
-  const expiringSoon = isExpiringSoon(announcement.expiresAt);
-  const categoryVariant = CATEGORY_VARIANT[announcement.category] ?? "default";
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`w-full text-left p-4 rounded-lg border bg-card transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring hover:border-primary/50 hover:shadow-md ${
-        announcement.pinned ? "border-primary/40 bg-primary/5" : "border-border"
-      }`}
-    >
-      {/* Badges row */}
-      <div className="flex flex-wrap gap-1.5 mb-2">
-        <Badge variant={categoryVariant}>{announcement.category}</Badge>
-        {announcement.pinned && <Badge variant="warning">Fijado</Badge>}
-        {expiringSoon && <Badge variant="error">Vence pronto</Badge>}
-      </div>
-
-      {/* Title */}
-      <p className="font-semibold text-foreground leading-snug mb-1.5">
-        {announcement.title}
-      </p>
-
-      {/* Excerpt */}
-      <p className="text-sm text-muted-foreground line-clamp-3">
-        {announcement.body.length > 180
-          ? announcement.body.slice(0, 177).trimEnd() + "…"
-          : announcement.body}
-      </p>
-
-      {/* Footer */}
-      <div className="flex items-center gap-1.5 mt-3 text-xs text-muted-foreground">
-        <IconCalendar className="w-3.5 h-3.5" />
-        <span>{formatDate(announcement.publishedAt)}</span>
-      </div>
-    </button>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Loading skeleton
 // ---------------------------------------------------------------------------
 
 function BoardSkeleton() {
   return (
     <div className="space-y-6">
+      {/* Filter skeleton */}
       <div className="flex flex-wrap gap-3">
         <Skeleton className="h-10 flex-1 min-w-[180px]" />
         <Skeleton className="h-10 w-44" />
       </div>
+
+      {/* Featured post skeleton */}
+      <div className="rounded-lg border border-border p-8 space-y-4">
+        <Skeleton className="h-8 w-40" />
+        <Skeleton className="h-6 w-3/4" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Skeleton className="h-40" />
+          <Skeleton className="h-40" />
+        </div>
+      </div>
+
+      {/* Grid skeleton */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="p-4 rounded-lg border border-border space-y-3">
-            <Skeleton className="h-5 w-20" />
-            <Skeleton className="h-5 w-3/4" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-2/3" />
-            <Skeleton className="h-3 w-28" />
+          <div key={i} className="rounded-lg border border-border overflow-hidden space-y-3">
+            <Skeleton className="h-6 w-full" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-4 w-28 mx-4" />
           </div>
         ))}
       </div>
@@ -245,7 +206,7 @@ export default function AnnouncementsPage() {
             )}
           </div>
 
-          {/* Grid */}
+          {/* Featured Post + Grid */}
           {filtered.length === 0 ? (
             <EmptyState
               icon={<IconInbox className="w-10 h-10" />}
@@ -268,14 +229,32 @@ export default function AnnouncementsPage() {
               }
             />
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filtered.map((a) => (
-                <AnnouncementCard
-                  key={a.id}
-                  announcement={a}
-                  onClick={() => setSelected(a)}
+            <div className="space-y-8">
+              {/* Featured post: pinned announcement with highest priority */}
+              {filtered[0]?.pinned && (
+                <FeaturedPostBanner
+                  announcement={filtered[0]}
+                  onViewDetails={() => setSelected(filtered[0])}
                 />
-              ))}
+              )}
+
+              {/* Feed grid */}
+              <div>
+                {filtered[0]?.pinned && (
+                  <h3 className="text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wide">
+                    Más anuncios
+                  </h3>
+                )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {(filtered[0]?.pinned ? filtered.slice(1) : filtered).map((a) => (
+                    <FeedPost
+                      key={a.id}
+                      announcement={a}
+                      onClick={() => setSelected(a)}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </>
@@ -289,15 +268,33 @@ export default function AnnouncementsPage() {
         size="lg"
       >
         {selected && (
-          <div className="space-y-4 px-6 pb-6">
-            {/* Meta row */}
+          <div className="space-y-6 px-6 pb-6">
+            {/* Badges */}
             <div className="flex flex-wrap gap-2">
               <Badge variant={CATEGORY_VARIANT[selected.category] ?? "default"}>
                 {selected.category}
               </Badge>
               {selected.pinned && <Badge variant="warning">Fijado</Badge>}
+              {selected.priority && (
+                <Badge
+                  variant={
+                    selected.priority === "urgent"
+                      ? "error"
+                      : selected.priority === "important"
+                        ? "warning"
+                        : "default"
+                  }
+                >
+                  {selected.priority === "urgent"
+                    ? "Urgente"
+                    : selected.priority === "important"
+                      ? "Importante"
+                      : "General"}
+                </Badge>
+              )}
             </div>
 
+            {/* Metadata */}
             <p className="text-sm text-muted-foreground">
               Publicado el {formatDate(selected.publishedAt)}
               {selected.expiresAt && (
@@ -305,6 +302,19 @@ export default function AnnouncementsPage() {
               )}
             </p>
 
+            {/* Media Gallery */}
+            {(selected.featured_image_url || selected.media?.length) && (
+              <div className="rounded-lg overflow-hidden">
+                {/* Import MediaGallery at top and use it here */}
+                <img
+                  src={selected.featured_image_url || selected.media?.[0]?.url || ""}
+                  alt={selected.featured_image_alt || "Featured image"}
+                  className="w-full h-auto max-h-96 object-cover rounded-lg"
+                />
+              </div>
+            )}
+
+            {/* Body */}
             <div className="pt-2 border-t border-border">
               <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
                 {selected.body}
