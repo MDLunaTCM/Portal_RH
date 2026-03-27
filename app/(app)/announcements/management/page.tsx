@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@supabase/supabase-js";
 import {
   Card,
   CardContent,
@@ -12,7 +13,7 @@ import {
   EmptyState,
   Skeleton,
 } from "@/components/ui";
-import { Modal, Select, Textarea, DatePicker } from "@/components/ui/shared";
+import { Modal, Select, Textarea, DatePicker, FileUpload } from "@/components/ui/shared";
 import {
   IconMegaphone,
   IconSearch,
@@ -55,6 +56,45 @@ const ROLE_LABELS: Record<UserRoleEnum, string> = {
   hr_admin: "RH",
   super_admin: "Super Admin",
 };
+
+// Helper to upload media files to Supabase storage
+async function uploadMediaFiles(files: File[], announcementId: string) {
+  if (!files.length) return [];
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  const uploaded = [];
+  for (const file of files) {
+    const isImage = file.type.startsWith("image/");
+    const isVideo = file.type.startsWith("video/");
+    if (!isImage && !isVideo) continue;
+
+    const fileExt = file.name.split(".").pop()?.toLowerCase() || "";
+    const fileName = `${announcementId}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const bucketPath = `announcements/${fileName}`;
+
+    const { data, error } = await supabase.storage
+      .from("announcements")
+      .upload(bucketPath, file, { cacheControl: "3600", upsert: false });
+
+    if (error) continue;
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("announcements").getPublicUrl(data.path);
+
+    uploaded.push({
+      id: data.path,
+      type: isImage ? "image" : "video",
+      url: publicUrl,
+      alt: file.name,
+    });
+  }
+  return uploaded;
+}
 
 const STATUS_CONFIG: Record<
   PublishStatusEnum,
@@ -128,7 +168,7 @@ function LoadingState() {
 
 interface AnnouncementFormProps {
   initial?: HRAnnouncement | null;
-  onSubmit: (values: AnnouncementInput & { publish_immediately?: boolean }) => void;
+  onSubmit: (values: AnnouncementInput & { publish_immediately?: boolean; media_files?: File[] }) => void;
   isPending: boolean;
   error: string | null;
 }
@@ -143,6 +183,7 @@ function AnnouncementForm({ initial, onSubmit, isPending, error }: AnnouncementF
   const [pinned, setPinned] = useState(initial?.pinned ?? false);
   const [expiresAt, setExpiresAt] = useState(initial?.expiresAt?.slice(0, 10) ?? "");
   const [publishImmediately, setPublishImmediately] = useState(false);
+  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
 
   const toggleRole = (role: UserRoleEnum) => {
     setTargetRoles((prev) =>
@@ -185,7 +226,7 @@ function AnnouncementForm({ initial, onSubmit, isPending, error }: AnnouncementF
         rows={5}
       />
 
-      {/* Category + Pinned row */}
+      {/* Category + Expires */}
       <div className="grid grid-cols-2 gap-4">
         <Select
           label="Categoría"
@@ -199,6 +240,16 @@ function AnnouncementForm({ initial, onSubmit, isPending, error }: AnnouncementF
           onChange={(v) => setExpiresAt(v)}
         />
       </div>
+
+      {/* Media upload */}
+      <FileUpload
+        label="Imágenes y videos"
+        helperText="Puedes agregar imágenes (JPG, PNG) o videos (MP4, WebM)"
+        accept="image/*,video/*"
+        multiple={true}
+        maxSize={50 * 1024 * 1024}
+        onFilesSelected={(files) => setMediaFiles(files)}
+      />
 
       {/* Target roles */}
       <div className="space-y-2">
@@ -332,12 +383,14 @@ export default function AnnouncementsManagementPage() {
   function openCreate() {
     setEditingAnnouncement(null);
     setFormError(null);
+    setMediaFiles([]);
     setModalOpen(true);
   }
 
   function openEdit(a: HRAnnouncement) {
     setEditingAnnouncement(a);
     setFormError(null);
+    setMediaFiles([]);
     setModalOpen(true);
   }
 
@@ -346,36 +399,66 @@ export default function AnnouncementsManagementPage() {
       setModalOpen(false);
       setEditingAnnouncement(null);
       setFormError(null);
+      setMediaFiles([]);
     }
   }
 
   function handleFormSubmit(values: AnnouncementInput & { publish_immediately?: boolean }) {
     setFormError(null);
     startTransition(async () => {
-      if (editingAnnouncement) {
-        const res = await updateAnnouncement(editingAnnouncement.id, {
+      try {
+        // Upload media files first if any
+        const uploadedMedia = await uploadMediaFiles(
+          mediaFiles,
+          editingAnnouncement?.id || "new"
+        );
+
+        const inputData: AnnouncementInput & { publish_immediately?: boolean } = {
           title: values.title,
           body: values.body,
           category: values.category,
           target_roles: values.target_roles,
           pinned: values.pinned,
           expires_at: values.expires_at,
-        });
-        if (res.error) { setFormError(res.error); return; }
-        setSuccessMsg("Anuncio actualizado correctamente.");
-      } else {
-        const res = await createAnnouncement(values);
-        if (res.error) { setFormError(res.error); return; }
-        setSuccessMsg(
-          values.publish_immediately
-            ? "Anuncio creado y publicado."
-            : "Anuncio guardado como borrador.",
-        );
+          publish_immediately: values.publish_immediately,
+        };
+
+        if (uploadedMedia.length > 0) {
+          inputData.media = uploadedMedia;
+          const firstImage = uploadedMedia.find((m) => m.type === "image");
+          if (firstImage) {
+            inputData.featured_image_url = firstImage.url;
+            inputData.featured_image_alt = firstImage.alt;
+          }
+        }
+
+        if (editingAnnouncement) {
+          const res = await updateAnnouncement(editingAnnouncement.id, inputData);
+          if (res.error) {
+            setFormError(res.error);
+            return;
+          }
+          setSuccessMsg("Anuncio actualizado correctamente.");
+        } else {
+          const res = await createAnnouncement(inputData);
+          if (res.error) {
+            setFormError(res.error);
+            return;
+          }
+          setSuccessMsg(
+            values.publish_immediately
+              ? "Anuncio creado y publicado."
+              : "Anuncio guardado como borrador.",
+          );
+        }
+        setModalOpen(false);
+        setEditingAnnouncement(null);
+        setMediaFiles([]);
+        refetch();
+        allDocs.refetch();
+      } catch (err) {
+        setFormError((err as Error).message || "Error al procesar el anuncio.");
       }
-      setModalOpen(false);
-      setEditingAnnouncement(null);
-      refetch();
-      allDocs.refetch();
     });
   }
 

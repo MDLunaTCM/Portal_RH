@@ -15,6 +15,14 @@ export interface AnnouncementInput {
   target_roles: UserRoleEnum[];
   pinned: boolean;
   expires_at?: string | null;
+  featured_image_url?: string;
+  featured_image_alt?: string;
+  media?: Array<{
+    id: string;
+    type: "image" | "video";
+    url: string;
+    alt?: string;
+  }>;
 }
 
 export interface SaveAnnouncementResult {
@@ -222,15 +230,32 @@ export async function createAnnouncement(
 
   if (error) return { id: null, error: error.message };
 
+  const announcementId = data.id as string;
+
+  // Update with media if provided from client
+  if (input.media && input.media.length > 0) {
+    const firstImage = input.media.find((m) => m.type === "image");
+    if (firstImage) {
+      await supabase
+        .from("announcements")
+        .update({
+          featured_image_url: input.featured_image_url || firstImage.url,
+          featured_image_alt: input.featured_image_alt || firstImage.alt,
+          media: input.media,
+        })
+        .eq("id", announcementId);
+    }
+  }
+
   await writeAuditLog({
     actor_id: user.id,
     action: "create",
     resource: "announcement",
-    resource_id: data.id as string,
+    resource_id: announcementId,
     metadata: { title: input.title.trim(), status },
   });
 
-  return { id: data.id as string, error: null };
+  return { id: announcementId, error: null };
 }
 
 // ---------------------------------------------------------------------------
@@ -261,6 +286,16 @@ export async function updateAnnouncement(
   if (input.target_roles !== undefined) updates.target_roles = input.target_roles;
   if (input.pinned !== undefined) updates.pinned = input.pinned;
   if (input.expires_at !== undefined) updates.expires_at = input.expires_at || null;
+
+  // Handle media if provided from client
+  if (input.media && input.media.length > 0) {
+    const firstImage = input.media.find((m) => m.type === "image");
+    if (firstImage) {
+      updates.featured_image_url = input.featured_image_url || firstImage.url;
+      updates.featured_image_alt = input.featured_image_alt || firstImage.alt;
+    }
+    updates.media = input.media;
+  }
 
   const { error } = await supabase.from("announcements").update(updates).eq("id", id);
   if (error) return { error: error.message };

@@ -88,14 +88,14 @@ export function FeedPost({ announcement, onClick }: FeedPostProps) {
         </div>
       </div>
 
-      {/* Title - truncated for readability */}
+      {/* Title */}
       <div className="px-4 space-y-2">
-        <h3 className="font-semibold text-foreground leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+        <h3 className="font-semibold text-foreground leading-snug group-hover:text-primary transition-colors">
           {announcement.title}
         </h3>
 
-        {/* Body excerpt */}
-        <p className="text-sm text-foreground/80 line-clamp-3 leading-relaxed">
+        {/* Body - full content displayed */}
+        <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">
           {announcement.body}
         </p>
       </div>
