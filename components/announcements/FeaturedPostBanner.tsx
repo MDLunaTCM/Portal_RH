@@ -99,10 +99,9 @@ export function FeaturedPostBanner({
               {announcement.title}
             </h2>
 
-            {/* Excerpt/body preview */}
-            <p className="text-base text-foreground/90 line-clamp-4 leading-relaxed">
-              {announcement.body.slice(0, 200)}
-              {announcement.body.length > 200 && "…"}
+            {/* Body - full content displayed */}
+            <p className="text-base text-foreground/90 leading-relaxed whitespace-pre-wrap">
+              {announcement.body}
             </p>
           </div>
 

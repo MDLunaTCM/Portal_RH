@@ -410,6 +410,9 @@ export interface Database {
           pinned: boolean;
           published_at: string | null;
           expires_at: string | null;
+          featured_image_url: string | null;
+          featured_image_alt: string | null;
+          media: Json;
           created_at: string;
           updated_at: string;
         };
@@ -424,6 +427,9 @@ export interface Database {
           pinned?: boolean;
           published_at?: string | null;
           expires_at?: string | null;
+          featured_image_url?: string | null;
+          featured_image_alt?: string | null;
+          media?: Json;
           created_at?: string;
           updated_at?: string;
         };
@@ -438,6 +444,9 @@ export interface Database {
           pinned?: boolean;
           published_at?: string | null;
           expires_at?: string | null;
+          featured_image_url?: string | null;
+          featured_image_alt?: string | null;
+          media?: Json;
           created_at?: string;
           updated_at?: string;
         };
