@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button, Input, Card, Progress } from "@/components/ui";
-import { IconLock, IconEye, IconEyeOff, IconCheck, IconAlertCircle } from "@/components/icons";
+import { IconEye, IconEyeOff, IconCheck } from "@/components/icons";
+import { setPassword } from "@/modules/auth/actions";
+import { createClient } from "@/lib/supabase/client";
 
 const passwordRequirements = [
   { id: "length", label: "At least 8 characters", test: (p: string) => p.length >= 8 },
@@ -14,27 +17,55 @@ const passwordRequirements = [
 ];
 
 export default function SetPasswordPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [password, setPassword] = useState("");
+  const [password, setPasswordValue] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [employeeId, setEmployeeId] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  // Verify an active session exists (invite/reset token must have been exchanged first).
+  // Without this check, the user can reach this page directly and get a cryptic error on submit.
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        setError(
+          "El enlace de invitación o recuperación no es válido o ya expiró. " +
+          "Solicita uno nuevo a tu área de RH."
+        );
+      }
+    });
+  }, []);
 
   const metRequirements = passwordRequirements.filter((r) => r.test(password));
   const passwordStrength = (metRequirements.length / passwordRequirements.length) * 100;
   const passwordsMatch = password === confirmPassword && password.length > 0;
-  const canSubmit = metRequirements.length === passwordRequirements.length && passwordsMatch && employeeId.length > 0;
+  const sessionError = error?.includes("enlace") ?? false;
+  const canSubmit =
+    !sessionError &&
+    metRequirements.length === passwordRequirements.length &&
+    passwordsMatch &&
+    employeeId.length > 0;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: { preventDefault(): void }) => {
     e.preventDefault();
     if (!canSubmit) return;
-    
+
     setIsLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setIsLoading(false);
-    window.location.href = "/login";
+    setError(null);
+
+    const { error: authError } = await setPassword(password);
+
+    if (authError) {
+      setError(authError);
+      setIsLoading(false);
+      return;
+    }
+
+    router.push("/login");
   };
 
   return (
@@ -60,6 +91,12 @@ export default function SetPasswordPage() {
 
       <Card padding="lg" className="shadow-lg">
         <form onSubmit={handleSubmit} className="space-y-5">
+          {error && (
+            <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
+
           <Input
             label="Employee ID"
             type="text"
@@ -76,7 +113,7 @@ export default function SetPasswordPage() {
               type={showPassword ? "text" : "password"}
               placeholder="Create a strong password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => setPasswordValue(e.target.value)}
               required
             />
             <button
@@ -104,7 +141,7 @@ export default function SetPasswordPage() {
                 </div>
                 <Progress value={passwordStrength} />
               </div>
-              
+
               <div className="grid grid-cols-1 gap-1.5">
                 {passwordRequirements.map((req) => (
                   <div

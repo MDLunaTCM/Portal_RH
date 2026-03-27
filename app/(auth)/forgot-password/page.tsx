@@ -2,20 +2,34 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Button, Input, Card } from "@/components/ui";
 import { IconMail, IconArrowRight, IconCheck } from "@/components/icons";
+import { forgotPassword } from "@/modules/auth/actions";
 
 export default function ForgotPasswordPage() {
+  const searchParams = useSearchParams();
+  const isSetup = searchParams.get("setup") === "true";
+
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [email, setEmail] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: { preventDefault(): void }) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    setError(null);
+
+    const { error: authError } = await forgotPassword(email);
+
     setIsLoading(false);
+
+    if (authError) {
+      setError(authError);
+      return;
+    }
+
     setIsSubmitted(true);
   };
 
@@ -38,30 +52,32 @@ export default function ForgotPasswordPage() {
           <div className="w-16 h-16 rounded-full bg-success flex items-center justify-center mx-auto mb-4">
             <IconCheck className="w-8 h-8 text-success-foreground" />
           </div>
-          <h2 className="text-xl font-bold text-foreground mb-2">Check your email</h2>
+          <h2 className="text-xl font-bold text-foreground mb-2">Revisa tu correo</h2>
           <p className="text-muted-foreground mb-6">
-            We&apos;ve sent password reset instructions to{" "}
+            {isSetup
+              ? "Te enviamos un enlace para activar tu cuenta a "
+              : "Te enviamos instrucciones para restablecer tu contraseña a "}
             <span className="font-medium text-foreground">{email}</span>
           </p>
           <div className="space-y-3">
             <Button variant="secondary" className="w-full" onClick={() => setIsSubmitted(false)}>
-              Try another email
+              Intentar con otro correo
             </Button>
             <Link href="/login" className="block">
               <Button variant="ghost" className="w-full">
-                Back to login
+                Volver al inicio de sesión
               </Button>
             </Link>
           </div>
         </Card>
 
         <p className="text-center text-sm text-muted-foreground">
-          Didn&apos;t receive the email? Check your spam folder or{" "}
+          ¿No recibiste el correo? Revisa tu carpeta de spam o{" "}
           <button
             onClick={() => setIsSubmitted(false)}
             className="text-primary hover:text-primary-hover font-medium transition-colors"
           >
-            try again
+            intenta de nuevo
           </button>
         </p>
       </div>
@@ -83,14 +99,24 @@ export default function ForgotPasswordPage() {
       </div>
 
       <div className="space-y-2 text-center lg:text-left">
-        <h2 className="text-2xl font-bold text-foreground">Reset your password</h2>
+        <h2 className="text-2xl font-bold text-foreground">
+          {isSetup ? "Activa tu cuenta" : "Recupera tu contraseña"}
+        </h2>
         <p className="text-muted-foreground">
-          Enter your email address and we&apos;ll send you instructions to reset your password.
+          {isSetup
+            ? "Ingresa tu correo corporativo y te enviaremos un enlace para crear tu contraseña."
+            : "Ingresa tu correo y te enviaremos instrucciones para restablecer tu contraseña."}
         </p>
       </div>
 
       <Card padding="lg" className="shadow-lg">
         <form onSubmit={handleSubmit} className="space-y-5">
+          {error && (
+            <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
+
           <div className="relative">
             <Input
               label="Email address"
@@ -104,18 +130,18 @@ export default function ForgotPasswordPage() {
           </div>
 
           <Button type="submit" className="w-full" isLoading={isLoading} rightIcon={<IconArrowRight className="w-4 h-4" />}>
-            Send reset instructions
+            {isSetup ? "Enviar enlace de activación" : "Enviar instrucciones"}
           </Button>
         </form>
       </Card>
 
       <p className="text-center text-sm text-muted-foreground">
-        Remember your password?{" "}
+        {isSetup ? "¿Ya tienes contraseña?" : "¿Recordaste tu contraseña?"}{" "}
         <Link
           href="/login"
           className="text-primary hover:text-primary-hover font-medium transition-colors"
         >
-          Back to login
+          Iniciar sesión
         </Link>
       </p>
     </div>

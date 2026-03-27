@@ -1,24 +1,45 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Button, Input, Card, Divider } from "@/components/ui";
-import { IconMail, IconLock, IconEye, IconEyeOff } from "@/components/icons";
+import { Button, Input, Card } from "@/components/ui";
+import { IconMail, IconEye, IconEyeOff } from "@/components/icons";
+import { login } from "@/modules/auth/actions";
+
+const QUERY_ERRORS: Record<string, string> = {
+  link_expired:
+    "El enlace de invitación o recuperación expiró. Solicita uno nuevo a tu área de RH.",
+  auth_callback_failed:
+    "No se pudo procesar el enlace de acceso. Intenta de nuevo.",
+};
 
 export default function LoginPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryError = searchParams.get("error");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(
+    queryError ? (QUERY_ERRORS[queryError] ?? null) : null
+  );
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: { preventDefault(): void }) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate login - replace with actual auth logic
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setIsLoading(false);
-    // Redirect to dashboard
-    window.location.href = "/dashboard";
+    setError(null);
+
+    const { error: authError } = await login(email, password);
+
+    if (authError) {
+      setError(authError);
+      setIsLoading(false);
+      return;
+    }
+
+    router.push("/dashboard");
   };
 
   return (
@@ -43,6 +64,12 @@ export default function LoginPage() {
 
       <Card padding="lg" className="shadow-lg">
         <form onSubmit={handleSubmit} className="space-y-5">
+          {error && (
+            <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
+
           <div className="relative">
             <Input
               label="Email"
@@ -96,16 +123,14 @@ export default function LoginPage() {
         </form>
       </Card>
 
-      <Divider label="or" />
-
       <Card padding="md" className="bg-muted/50">
         <p className="text-center text-sm text-muted-foreground">
-          First time here?{" "}
+          ¿Primera vez?{" "}
           <Link
-            href="/set-password"
+            href="/forgot-password?setup=true"
             className="text-primary hover:text-primary-hover font-medium transition-colors"
           >
-            Set up your account
+            Activa tu cuenta aquí
           </Link>
         </p>
       </Card>

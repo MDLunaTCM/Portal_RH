@@ -1,206 +1,374 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, Button, Badge, Tabs, EmptyState } from "@/components/ui";
-import { Modal, Select, SearchInput, DataTable } from "@/components/ui/shared";
-import { IconWallet, IconDownload, IconEye, IconFileText, IconCalendar } from "@/components/icons";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  Button,
+  Badge,
+  EmptyState,
+  Skeleton,
+} from "@/components/ui";
+import { Modal, Select, SearchInput } from "@/components/ui/shared";
+import {
+  IconWallet,
+  IconDownload,
+  IconFileText,
+  IconCalendar,
+  IconAlertCircle,
+} from "@/components/icons";
+import { useSession } from "@/modules/auth/context";
+import {
+  useMyPayroll,
+  type PayrollReceipt,
+  type PayrollConcept,
+} from "@/modules/payroll/hooks/use-my-payroll";
+import { getSignedUrl } from "@/modules/storage/actions";
+import { STORAGE_BUCKETS } from "@/modules/storage/paths";
 
-interface PayrollReceipt {
-  id: string;
-  period: string;
-  payDate: string;
-  grossPay: number;
-  deductions: number;
-  netPay: number;
-  status: "paid" | "pending" | "processing";
-  type: "regular" | "bonus" | "aguinaldo" | "settlement";
-  hasXml: boolean;
-  hasPdf: boolean;
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+const MONTHS_ES = [
+  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+] as const;
+
+function formatCurrency(amount: number) {
+  return new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: "MXN",
+    maximumFractionDigits: 2,
+  }).format(amount);
 }
 
-const mockReceipts: PayrollReceipt[] = [
-  { id: "1", period: "March 2026 - 2nd", payDate: "2026-03-31", grossPay: 45000, deductions: 8500, netPay: 36500, status: "pending", type: "regular", hasXml: false, hasPdf: false },
-  { id: "2", period: "March 2026 - 1st", payDate: "2026-03-15", grossPay: 45000, deductions: 8500, netPay: 36500, status: "paid", type: "regular", hasXml: true, hasPdf: true },
-  { id: "3", period: "February 2026 - 2nd", payDate: "2026-02-28", grossPay: 45000, deductions: 8500, netPay: 36500, status: "paid", type: "regular", hasXml: true, hasPdf: true },
-  { id: "4", period: "February 2026 - 1st", payDate: "2026-02-15", grossPay: 45000, deductions: 8500, netPay: 36500, status: "paid", type: "regular", hasXml: true, hasPdf: true },
-  { id: "5", period: "January 2026 - 2nd", payDate: "2026-01-31", grossPay: 45000, deductions: 8500, netPay: 36500, status: "paid", type: "regular", hasXml: true, hasPdf: true },
-  { id: "6", period: "December 2025 - Aguinaldo", payDate: "2025-12-20", grossPay: 22500, deductions: 2800, netPay: 19700, status: "paid", type: "aguinaldo", hasXml: true, hasPdf: true },
-];
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString("es-MX", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
 
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(amount);
+/** "2026-03" → "Marzo 2026" */
+function formatPeriod(period: string) {
+  const [year, month] = period.split("-");
+  const monthIndex = parseInt(month, 10) - 1;
+  if (isNaN(monthIndex) || monthIndex < 0 || monthIndex > 11) return period;
+  return `${MONTHS_ES[monthIndex]} ${year}`;
+}
+
+const PERIOD_TYPE_CONFIG: Record<
+  string,
+  { label: string; variant: "outline" | "info" | "success" | "warning" | "error" }
+> = {
+  quincenal:  { label: "Quincenal",  variant: "outline" },
+  mensual:    { label: "Mensual",    variant: "outline" },
+  aguinaldo:  { label: "Aguinaldo",  variant: "success" },
+  finiquito:  { label: "Finiquito",  variant: "warning" },
+  bono:       { label: "Bono",       variant: "info" },
+  vacaciones: { label: "Vacaciones", variant: "info" },
 };
 
-const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" });
-};
+function getPeriodTypeBadge(periodType: string) {
+  const config = PERIOD_TYPE_CONFIG[periodType.toLowerCase()];
+  if (!config) return <Badge variant="outline">{periodType}</Badge>;
+  return <Badge variant={config.variant}>{config.label}</Badge>;
+}
 
-const getStatusBadge = (status: PayrollReceipt["status"]) => {
-  switch (status) {
-    case "paid": return <Badge variant="success">Paid</Badge>;
-    case "pending": return <Badge variant="warning">Pending</Badge>;
-    case "processing": return <Badge variant="info">Processing</Badge>;
-  }
-};
+// ---------------------------------------------------------------------------
+// Loading skeleton
+// ---------------------------------------------------------------------------
 
-const getTypeBadge = (type: PayrollReceipt["type"]) => {
-  switch (type) {
-    case "regular": return <Badge variant="outline">Regular</Badge>;
-    case "bonus": return <Badge variant="info">Bonus</Badge>;
-    case "aguinaldo": return <Badge variant="success">Aguinaldo</Badge>;
-    case "settlement": return <Badge variant="warning">Settlement</Badge>;
-  }
-};
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-6">
+      {/* Summary cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {[1, 2, 3].map((i) => (
+          <Card key={i}>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                <Skeleton className="w-12 h-12 rounded-xl" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-6 w-32" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      {/* Receipt rows */}
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-48" />
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center justify-between p-4 rounded-lg border border-border">
+              <div className="flex items-center gap-4">
+                <Skeleton className="w-12 h-12 rounded-lg" />
+                <div className="space-y-2">
+                  <Skeleton className="h-5 w-40" />
+                  <Skeleton className="h-4 w-28" />
+                </div>
+              </div>
+              <Skeleton className="h-8 w-20" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
-// Receipt Detail Drawer Content
-function ReceiptDetail({ receipt, onClose }: { receipt: PayrollReceipt; onClose: () => void }) {
-  const earnings = [
-    { concept: "Base Salary", amount: 40000 },
-    { concept: "Food Vouchers", amount: 3000 },
-    { concept: "Transportation", amount: 2000 },
-  ];
-  
-  const deductions = [
-    { concept: "IMSS", amount: 2500 },
-    { concept: "ISR", amount: 5200 },
-    { concept: "Savings Fund", amount: 800 },
-  ];
+// ---------------------------------------------------------------------------
+// Error state
+// ---------------------------------------------------------------------------
+
+function ErrorState({ onRetry }: { onRetry: () => void }) {
+  return (
+    <Card className="border-error-border bg-error/30">
+      <CardContent className="p-8">
+        <div className="flex flex-col items-center text-center">
+          <div className="w-16 h-16 rounded-full bg-error flex items-center justify-center mb-4">
+            <IconAlertCircle className="w-8 h-8 text-error-foreground" />
+          </div>
+          <h3 className="text-lg font-semibold text-foreground mb-2">
+            Error al cargar recibos
+          </h3>
+          <p className="text-sm text-muted-foreground mb-4 max-w-sm">
+            No pudimos cargar tus recibos de nómina. Verifica tu conexión e intenta de nuevo.
+          </p>
+          <Button onClick={onRetry}>Intentar de nuevo</Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Receipt detail (rendered inside Modal)
+// ---------------------------------------------------------------------------
+
+function ReceiptDetail({ receipt }: { receipt: PayrollReceipt }) {
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+
+  const earnings: PayrollConcept[] = receipt.concepts.filter((c) => c.type === "earning");
+  const deductions: PayrollConcept[] = receipt.concepts.filter((c) => c.type === "deduction");
+
+  const handleDownloadPdf = async () => {
+    setIsDownloading(true);
+    setDownloadError(null);
+
+    const { signedUrl, error } = await getSignedUrl(
+      STORAGE_BUCKETS.PAYROLL,
+      receipt.storagePath,
+      300,
+    );
+
+    setIsDownloading(false);
+
+    if (error || !signedUrl) {
+      setDownloadError("No se pudo generar el enlace de descarga. Inténtalo de nuevo.");
+      return;
+    }
+
+    window.open(signedUrl, "_blank", "noopener,noreferrer");
+  };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Net pay header */}
       <div className="p-4 rounded-lg bg-primary text-primary-foreground">
-        <p className="text-sm opacity-80">Net Pay</p>
-        <p className="text-3xl font-bold">{formatCurrency(receipt.netPay)}</p>
-        <p className="text-sm opacity-80 mt-1">{receipt.period}</p>
+        <p className="text-sm opacity-80">Neto a recibir</p>
+        <p className="text-3xl font-bold">{formatCurrency(receipt.netAmount)}</p>
+        <p className="text-sm opacity-80 mt-1">
+          {formatPeriod(receipt.period)} · {PERIOD_TYPE_CONFIG[receipt.periodType.toLowerCase()]?.label ?? receipt.periodType}
+        </p>
       </div>
 
-      {/* Status & Date */}
+      {/* Date */}
       <div className="flex items-center justify-between p-4 rounded-lg bg-muted">
         <div>
-          <p className="text-xs text-muted-foreground">Status</p>
-          <div className="mt-1">{getStatusBadge(receipt.status)}</div>
+          <p className="text-xs text-muted-foreground">Tipo</p>
+          <div className="mt-1">{getPeriodTypeBadge(receipt.periodType)}</div>
         </div>
         <div className="text-right">
-          <p className="text-xs text-muted-foreground">Pay Date</p>
-          <p className="text-sm font-medium text-foreground">{formatDate(receipt.payDate)}</p>
+          <p className="text-xs text-muted-foreground">Fecha de pago</p>
+          <p className="text-sm font-medium text-foreground">{formatDate(receipt.issuedAt)}</p>
         </div>
       </div>
 
       {/* Earnings */}
-      <div>
-        <h4 className="text-sm font-medium text-foreground mb-3">Earnings</h4>
-        <div className="space-y-2">
-          {earnings.map((item, i) => (
-            <div key={i} className="flex justify-between py-2 border-b border-border last:border-0">
-              <span className="text-sm text-muted-foreground">{item.concept}</span>
-              <span className="text-sm font-medium text-success-foreground">+{formatCurrency(item.amount)}</span>
+      {earnings.length > 0 && (
+        <div>
+          <h4 className="text-sm font-medium text-foreground mb-3">Percepciones</h4>
+          <div className="space-y-0">
+            {earnings.map((item, i) => (
+              <div
+                key={i}
+                className="flex justify-between py-2 border-b border-border last:border-0"
+              >
+                <span className="text-sm text-muted-foreground">{item.concept}</span>
+                <span className="text-sm font-medium text-success-foreground">
+                  +{formatCurrency(item.amount)}
+                </span>
+              </div>
+            ))}
+            <div className="flex justify-between pt-2 font-medium">
+              <span className="text-foreground">Total percepciones</span>
+              <span className="text-foreground">{formatCurrency(receipt.grossAmount)}</span>
             </div>
-          ))}
-          <div className="flex justify-between pt-2 font-medium">
-            <span className="text-foreground">Total Earnings</span>
-            <span className="text-foreground">{formatCurrency(receipt.grossPay)}</span>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Deductions */}
-      <div>
-        <h4 className="text-sm font-medium text-foreground mb-3">Deductions</h4>
-        <div className="space-y-2">
-          {deductions.map((item, i) => (
-            <div key={i} className="flex justify-between py-2 border-b border-border last:border-0">
-              <span className="text-sm text-muted-foreground">{item.concept}</span>
-              <span className="text-sm font-medium text-error-foreground">-{formatCurrency(item.amount)}</span>
+      {deductions.length > 0 && (
+        <div>
+          <h4 className="text-sm font-medium text-foreground mb-3">Deducciones</h4>
+          <div className="space-y-0">
+            {deductions.map((item, i) => (
+              <div
+                key={i}
+                className="flex justify-between py-2 border-b border-border last:border-0"
+              >
+                <span className="text-sm text-muted-foreground">{item.concept}</span>
+                <span className="text-sm font-medium text-error-foreground">
+                  -{formatCurrency(item.amount)}
+                </span>
+              </div>
+            ))}
+            <div className="flex justify-between pt-2 font-medium">
+              <span className="text-foreground">Total deducciones</span>
+              <span className="text-error-foreground">
+                -{formatCurrency(receipt.grossAmount - receipt.netAmount)}
+              </span>
             </div>
-          ))}
-          <div className="flex justify-between pt-2 font-medium">
-            <span className="text-foreground">Total Deductions</span>
-            <span className="text-error-foreground">-{formatCurrency(receipt.deductions)}</span>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Net Pay Summary */}
-      <div className="p-4 rounded-lg bg-success border border-success-border">
+      {/* Net summary */}
+      <div className="p-4 rounded-lg bg-success/10 border border-success-border">
         <div className="flex justify-between items-center">
-          <span className="font-medium text-foreground">Net Pay</span>
-          <span className="text-xl font-bold text-success-foreground">{formatCurrency(receipt.netPay)}</span>
+          <span className="font-medium text-foreground">Neto a recibir</span>
+          <span className="text-xl font-bold text-success-foreground">
+            {formatCurrency(receipt.netAmount)}
+          </span>
         </div>
       </div>
 
-      {/* Download Actions */}
+      {/* Download error */}
+      {downloadError && (
+        <div className="flex items-center gap-2 p-3 rounded-lg bg-error/10 border border-error-border text-error-foreground text-sm">
+          <IconAlertCircle className="w-4 h-4 shrink-0" />
+          <span>{downloadError}</span>
+        </div>
+      )}
+
+      {/* Download actions */}
       <div className="space-y-3">
-        <Button 
-          variant="primary" 
-          className="w-full" 
+        <Button
+          className="w-full"
           leftIcon={<IconDownload className="w-4 h-4" />}
-          disabled={!receipt.hasPdf}
+          onClick={handleDownloadPdf}
+          isLoading={isDownloading}
+          disabled={isDownloading}
         >
-          Download PDF
+          Descargar PDF
         </Button>
-        <Button 
-          variant="outline" 
-          className="w-full" 
+        <Button
+          variant="outline"
+          className="w-full"
           leftIcon={<IconFileText className="w-4 h-4" />}
-          disabled={!receipt.hasXml}
+          disabled
         >
-          Download XML (CFDI)
+          Descargar XML (CFDI) — No disponible
         </Button>
       </div>
     </div>
   );
 }
 
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
+
 export default function PayrollReceiptsPage() {
+  const { user, isLoading: sessionLoading } = useSession();
+  const userId = user?.id ?? null;
+
+  const { receipts, isLoading, error, refetch } = useMyPayroll(userId);
+
   const [selectedReceipt, setSelectedReceipt] = useState<PayrollReceipt | null>(null);
-  const [yearFilter, setYearFilter] = useState("2026");
+  const [yearFilter, setYearFilter] = useState("");
   const [monthFilter, setMonthFilter] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const years = [
-    { value: "2026", label: "2026" },
-    { value: "2025", label: "2025" },
-    { value: "2024", label: "2024" },
+  // Derive available years from receipts
+  const years = Array.from(
+    new Set(receipts.map((r) => r.issuedAt.substring(0, 4))),
+  )
+    .sort((a, b) => b.localeCompare(a))
+    .map((y) => ({ value: y, label: y }));
+
+  const yearOptions = [{ value: "", label: "Todos los años" }, ...years];
+
+  const monthOptions = [
+    { value: "", label: "Todos los meses" },
+    { value: "01", label: "Enero" },
+    { value: "02", label: "Febrero" },
+    { value: "03", label: "Marzo" },
+    { value: "04", label: "Abril" },
+    { value: "05", label: "Mayo" },
+    { value: "06", label: "Junio" },
+    { value: "07", label: "Julio" },
+    { value: "08", label: "Agosto" },
+    { value: "09", label: "Septiembre" },
+    { value: "10", label: "Octubre" },
+    { value: "11", label: "Noviembre" },
+    { value: "12", label: "Diciembre" },
   ];
 
-  const months = [
-    { value: "", label: "All Months" },
-    { value: "01", label: "January" },
-    { value: "02", label: "February" },
-    { value: "03", label: "March" },
-    { value: "04", label: "April" },
-    { value: "05", label: "May" },
-    { value: "06", label: "June" },
-    { value: "07", label: "July" },
-    { value: "08", label: "August" },
-    { value: "09", label: "September" },
-    { value: "10", label: "October" },
-    { value: "11", label: "November" },
-    { value: "12", label: "December" },
-  ];
-
-  const filteredReceipts = mockReceipts.filter((receipt) => {
-    const matchesYear = receipt.payDate.startsWith(yearFilter);
-    const matchesMonth = !monthFilter || receipt.payDate.substring(5, 7) === monthFilter;
-    const matchesSearch = receipt.period.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredReceipts = receipts.filter((r) => {
+    const matchesYear = !yearFilter || r.issuedAt.startsWith(yearFilter);
+    const matchesMonth = !monthFilter || r.period.substring(5, 7) === monthFilter;
+    const matchesSearch =
+      !searchQuery || formatPeriod(r.period).toLowerCase().includes(searchQuery.toLowerCase());
     return matchesYear && matchesMonth && matchesSearch;
   });
 
-  // Calculate totals
-  const totalNetPay = filteredReceipts
-    .filter((r) => r.status === "paid")
-    .reduce((sum, r) => sum + r.netPay, 0);
+  const currentYear = new Date().getFullYear().toString();
+  const ytdNetPay = receipts
+    .filter((r) => r.issuedAt.startsWith(currentYear))
+    .reduce((sum, r) => sum + r.netAmount, 0);
+
+  const latestReceipt = receipts[0] ?? null;
+
+  const showLoading = sessionLoading || isLoading;
+
+  if (showLoading) return <LoadingSkeleton />;
+  if (error) return <ErrorState onRetry={refetch} />;
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
+      {/* Page header */}
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Payroll Receipts</h1>
-        <p className="text-muted-foreground">View and download your payroll receipts</p>
+        <h1 className="text-2xl font-bold text-foreground">Recibos de nómina</h1>
+        <p className="text-muted-foreground">
+          Consulta y descarga tus recibos de pago
+        </p>
       </div>
 
-      {/* Summary Cards */}
+      {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-4">
@@ -209,8 +377,10 @@ export default function PayrollReceiptsPage() {
                 <IconWallet className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">YTD Net Pay</p>
-                <p className="text-xl font-bold text-foreground">{formatCurrency(totalNetPay)}</p>
+                <p className="text-sm text-muted-foreground">Neto acumulado {currentYear}</p>
+                <p className="text-xl font-bold text-foreground">
+                  {receipts.length === 0 ? "—" : formatCurrency(ytdNetPay)}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -219,12 +389,12 @@ export default function PayrollReceiptsPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-success/50">
+              <div className="p-3 rounded-xl bg-success/20">
                 <IconFileText className="w-6 h-6 text-success-foreground" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Receipts Available</p>
-                <p className="text-xl font-bold text-foreground">{filteredReceipts.filter((r) => r.status === "paid").length}</p>
+                <p className="text-sm text-muted-foreground">Recibos disponibles</p>
+                <p className="text-xl font-bold text-foreground">{receipts.length}</p>
               </div>
             </div>
           </CardContent>
@@ -233,43 +403,45 @@ export default function PayrollReceiptsPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-warning/50">
+              <div className="p-3 rounded-xl bg-warning/20">
                 <IconCalendar className="w-6 h-6 text-warning-foreground" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Next Pay Date</p>
-                <p className="text-xl font-bold text-foreground">Mar 31</p>
+                <p className="text-sm text-muted-foreground">Último pago</p>
+                <p className="text-xl font-bold text-foreground">
+                  {latestReceipt ? formatDate(latestReceipt.issuedAt) : "—"}
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters */}
+      {/* Receipt list with filters */}
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <CardTitle>Receipt History</CardTitle>
-              <CardDescription>All your payroll receipts</CardDescription>
+              <CardTitle>Historial de recibos</CardTitle>
+              <CardDescription>Todos tus recibos de nómina</CardDescription>
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
               <Select
-                options={years}
+                options={yearOptions}
                 value={yearFilter}
                 onChange={setYearFilter}
-                className="w-full sm:w-28"
+                className="w-full sm:w-36"
               />
               <Select
-                options={months}
+                options={monthOptions}
                 value={monthFilter}
                 onChange={setMonthFilter}
-                className="w-full sm:w-36"
+                className="w-full sm:w-40"
               />
               <SearchInput
                 value={searchQuery}
                 onChange={setSearchQuery}
-                placeholder="Search..."
+                placeholder="Buscar periodo..."
                 className="w-full sm:w-48"
               />
             </div>
@@ -279,16 +451,25 @@ export default function PayrollReceiptsPage() {
           {filteredReceipts.length === 0 ? (
             <EmptyState
               icon={<IconWallet className="w-12 h-12" />}
-              title="No receipts found"
-              description="No payroll receipts match your filters"
+              title={
+                receipts.length === 0
+                  ? "No tienes recibos de nómina"
+                  : "Sin resultados"
+              }
+              description={
+                receipts.length === 0
+                  ? "Aquí aparecerán tus recibos cuando RH los suba al sistema."
+                  : "No hay recibos que coincidan con los filtros seleccionados."
+              }
             />
           ) : (
             <div className="space-y-3">
               {filteredReceipts.map((receipt) => (
-                <div
+                <button
                   key={receipt.id}
+                  type="button"
                   onClick={() => setSelectedReceipt(receipt)}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border border-border hover:border-primary/50 hover:bg-muted/50 cursor-pointer transition-colors gap-4"
+                  className="w-full flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border border-border hover:border-primary/50 hover:bg-muted/50 cursor-pointer transition-colors gap-4 text-left"
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -296,42 +477,47 @@ export default function PayrollReceiptsPage() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-medium text-foreground">{receipt.period}</p>
-                        {getTypeBadge(receipt.type)}
+                        <p className="font-medium text-foreground">
+                          {formatPeriod(receipt.period)}
+                        </p>
+                        {getPeriodTypeBadge(receipt.periodType)}
                       </div>
-                      <p className="text-sm text-muted-foreground">Pay date: {formatDate(receipt.payDate)}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Fecha de pago: {formatDate(receipt.issuedAt)}
+                      </p>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-8">
                     <div className="text-left sm:text-right">
-                      <p className="text-lg font-bold text-foreground">{formatCurrency(receipt.netPay)}</p>
-                      <p className="text-xs text-muted-foreground">Net pay</p>
+                      <p className="text-lg font-bold text-foreground">
+                        {formatCurrency(receipt.netAmount)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Neto</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {getStatusBadge(receipt.status)}
-                      <Button variant="ghost" size="sm">
-                        <IconEye className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    <Button variant="ghost" size="sm" tabIndex={-1}>
+                      <IconDownload className="w-4 h-4" />
+                    </Button>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Receipt Detail Modal */}
+      {/* Receipt detail modal */}
       <Modal
         isOpen={!!selectedReceipt}
         onClose={() => setSelectedReceipt(null)}
-        title="Receipt Details"
+        title={
+          selectedReceipt
+            ? `Recibo — ${formatPeriod(selectedReceipt.period)}`
+            : "Detalle de recibo"
+        }
         size="md"
       >
-        {selectedReceipt && (
-          <ReceiptDetail receipt={selectedReceipt} onClose={() => setSelectedReceipt(null)} />
-        )}
+        {selectedReceipt && <ReceiptDetail receipt={selectedReceipt} />}
       </Modal>
     </div>
   );

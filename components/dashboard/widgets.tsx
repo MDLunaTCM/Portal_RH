@@ -521,3 +521,21 @@ export function DashboardSkeleton() {
     </div>
   );
 }
+
+export function AnnouncementsSkeleton() {
+  return (
+    <Card>
+      <CardHeader className="flex-row items-center justify-between">
+        <Skeleton className="h-5 w-32" />
+        <Skeleton className="h-4 w-16" />
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-16 w-full rounded-lg" />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

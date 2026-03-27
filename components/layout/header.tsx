@@ -25,9 +25,10 @@ interface HeaderProps {
   onMenuClick: () => void;
   isDarkMode: boolean;
   onToggleDarkMode: () => void;
+  onLogout: () => Promise<void>;
 }
 
-export function Header({ user, onMenuClick, isDarkMode, onToggleDarkMode }: HeaderProps) {
+export function Header({ user, onMenuClick, isDarkMode, onToggleDarkMode, onLogout }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
 
@@ -40,7 +41,7 @@ export function Header({ user, onMenuClick, isDarkMode, onToggleDarkMode }: Head
   const unreadCount = notifications.filter((n) => n.unread).length;
 
   return (
-    <header className="h-16 bg-header text-header-foreground flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30">
+    <header className="h-16 bg-primary text-header-foreground flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30">
       {/* Left section */}
       <div className="flex items-center gap-4">
         <button
@@ -78,7 +79,7 @@ export function Header({ user, onMenuClick, isDarkMode, onToggleDarkMode }: Head
         {/* Theme toggle */}
         <button
           onClick={onToggleDarkMode}
-          className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+          className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
           aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
         >
           {isDarkMode ? <IconSun className="w-5 h-5" /> : <IconMoon className="w-5 h-5" />}
@@ -91,7 +92,7 @@ export function Header({ user, onMenuClick, isDarkMode, onToggleDarkMode }: Head
               setShowNotifications(!showNotifications);
               setShowProfile(false);
             }}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors relative"
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors relative text-white"
             aria-label="Notifications"
           >
             <IconBell className="w-5 h-5" />
@@ -148,7 +149,7 @@ export function Header({ user, onMenuClick, isDarkMode, onToggleDarkMode }: Head
               setShowProfile(!showProfile);
               setShowNotifications(false);
             }}
-            className="flex items-center gap-2 p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+            className="flex items-center gap-2 p-1.5 hover:bg-white/10 rounded-lg transition-colors text-white"
           >
             <Avatar fallback={user.name} size="sm" src={user.avatar} />
             <div className="hidden lg:block text-left">
@@ -188,9 +189,7 @@ export function Header({ user, onMenuClick, isDarkMode, onToggleDarkMode }: Head
               </div>
               <div className="p-2 border-t border-border">
                 <button
-                  onClick={() => {
-                    window.location.href = "/login";
-                  }}
+                  onClick={() => onLogout()}
                   className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted text-sm transition-colors w-full text-error-foreground"
                 >
                   <IconLogout className="w-4 h-4" />

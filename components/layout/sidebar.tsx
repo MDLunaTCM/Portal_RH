@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   IconDashboard,
-  IconCalendar,
   IconWallet,
   IconDocument,
   IconUsers,
@@ -19,14 +18,11 @@ import {
   IconChevronDown,
   IconChevronRight,
   IconCar,
-  IconIdCard,
   IconMessageSquare,
-  IconFileText,
   IconClock,
   IconInbox,
 } from "@/components/icons";
-
-type UserRole = "employee" | "hr" | "manager" | "admin";
+import type { UserRole } from "@/types";
 
 interface NavItem {
   label: string;
@@ -41,118 +37,122 @@ const navItems: NavItem[] = [
     label: "Dashboard",
     href: "/dashboard",
     icon: IconDashboard,
-    roles: ["employee", "hr", "manager", "admin"],
+    roles: ["employee", "hr_admin", "manager", "super_admin"],
   },
   {
-    label: "My Requests",
+    label: "Solicitudes",
     icon: IconInbox,
-    roles: ["employee", "hr", "manager", "admin"],
+    roles: ["employee", "hr_admin", "manager", "super_admin"],
     children: [
-      { label: "Vacations", href: "/requests/vacations", roles: ["employee", "hr", "manager", "admin"] },
-      { label: "Employment Letters", href: "/requests/letters", roles: ["employee", "hr", "manager", "admin"] },
-      { label: "Card Replacement", href: "/requests/cards", roles: ["employee", "hr", "manager", "admin"] },
-      { label: "Equipment", href: "/requests/equipment", roles: ["employee", "hr", "manager", "admin"] },
+      { label: "Mis solicitudes", href: "/requests", roles: ["employee", "hr_admin", "manager", "super_admin"] },
+      { label: "Nueva solicitud", href: "/requests/new", roles: ["employee", "hr_admin", "manager", "super_admin"] },
+      { label: "Bandeja RH", href: "/hr/requests", roles: ["hr_admin", "super_admin"] },
     ],
   },
   {
     label: "Payroll",
     icon: IconWallet,
-    roles: ["employee", "hr", "manager", "admin"],
+    roles: ["employee", "hr_admin", "manager", "super_admin"],
     children: [
-      { label: "My Receipts", href: "/payroll/receipts", roles: ["employee", "hr", "manager", "admin"] },
-      { label: "Payroll Management", href: "/payroll/management", roles: ["hr", "admin"] },
+      { label: "My Receipts", href: "/payroll/receipts", roles: ["employee", "hr_admin", "manager", "super_admin"] },
+      { label: "Payroll Management", href: "/payroll/management", roles: ["hr_admin", "super_admin"] },
     ],
   },
   {
     label: "Time & Attendance",
     href: "/attendance",
     icon: IconClock,
-    roles: ["employee", "hr", "manager", "admin"],
+    roles: ["employee", "hr_admin", "manager", "super_admin"],
   },
   {
     label: "Training",
     icon: IconGraduationCap,
-    roles: ["employee", "hr", "manager", "admin"],
+    roles: ["employee", "hr_admin", "manager", "super_admin"],
     children: [
-      { label: "My Courses", href: "/training/courses", roles: ["employee", "hr", "manager", "admin"] },
-      { label: "Onboarding", href: "/training/onboarding", roles: ["employee", "hr", "manager", "admin"] },
-      { label: "LMS Admin", href: "/training/admin", roles: ["hr", "admin"] },
+      { label: "My Courses", href: "/training/courses", roles: ["employee", "hr_admin", "manager", "super_admin"] },
+      { label: "Onboarding", href: "/training/onboarding", roles: ["employee", "hr_admin", "manager", "super_admin"] },
+      { label: "LMS Admin", href: "/training/admin", roles: ["hr_admin", "super_admin"] },
     ],
   },
   {
     label: "Performance",
     icon: IconTarget,
-    roles: ["employee", "hr", "manager", "admin"],
+    roles: ["employee", "hr_admin", "manager", "super_admin"],
     children: [
-      { label: "My Reviews", href: "/performance/reviews", roles: ["employee", "hr", "manager", "admin"] },
-      { label: "My KPIs", href: "/performance/kpis", roles: ["employee", "hr", "manager", "admin"] },
-      { label: "Team Reviews", href: "/performance/team", roles: ["manager", "hr", "admin"] },
+      { label: "My Reviews", href: "/performance/reviews", roles: ["employee", "hr_admin", "manager", "super_admin"] },
+      { label: "My KPIs", href: "/performance/kpis", roles: ["employee", "hr_admin", "manager", "super_admin"] },
+      { label: "Team Reviews", href: "/performance/team", roles: ["manager", "hr_admin", "super_admin"] },
     ],
   },
   {
     label: "Organization",
     icon: IconUsers,
-    roles: ["employee", "hr", "manager", "admin"],
+    roles: ["employee", "hr_admin", "manager", "super_admin"],
     children: [
-      { label: "Directory", href: "/organization/directory", roles: ["employee", "hr", "manager", "admin"] },
-      { label: "Org Chart", href: "/organization/chart", roles: ["employee", "hr", "manager", "admin"] },
-      { label: "Departments", href: "/organization/departments", roles: ["hr", "admin"] },
+      { label: "Directory", href: "/organization/directory", roles: ["employee", "hr_admin", "manager", "super_admin"] },
+      { label: "Org Chart", href: "/organization/chart", roles: ["employee", "hr_admin", "manager", "super_admin"] },
+      { label: "Departments", href: "/organization/departments", roles: ["hr_admin", "super_admin"] },
     ],
   },
   {
     label: "Recruitment",
     icon: IconBriefcase,
-    roles: ["hr", "manager", "admin"],
+    roles: ["hr_admin", "manager", "super_admin"],
     children: [
-      { label: "Open Positions", href: "/recruitment/positions", roles: ["hr", "manager", "admin"] },
-      { label: "Candidates", href: "/recruitment/candidates", roles: ["hr", "admin"] },
-      { label: "Requisitions", href: "/recruitment/requisitions", roles: ["hr", "manager", "admin"] },
+      { label: "Open Positions", href: "/recruitment/positions", roles: ["hr_admin", "manager", "super_admin"] },
+      { label: "Candidates", href: "/recruitment/candidates", roles: ["hr_admin", "super_admin"] },
+      { label: "Requisitions", href: "/recruitment/requisitions", roles: ["hr_admin", "manager", "super_admin"] },
     ],
   },
   {
     label: "Documents",
     icon: IconDocument,
-    roles: ["employee", "hr", "manager", "admin"],
+    roles: ["employee", "hr_admin", "manager", "super_admin"],
     children: [
-      { label: "My Documents", href: "/documents/personal", roles: ["employee", "hr", "manager", "admin"] },
-      { label: "Policies", href: "/documents/policies", roles: ["employee", "hr", "manager", "admin"] },
-      { label: "Document Management", href: "/documents/management", roles: ["hr", "admin"] },
+      { label: "My Documents", href: "/documents/personal", roles: ["employee", "hr_admin", "manager", "super_admin"] },
+      { label: "Reglamentos", href: "/documents/policies", roles: ["employee", "hr_admin", "manager", "super_admin"] },
+      { label: "Gestión de Reglamentos", href: "/documents/policies/management", roles: ["hr_admin", "super_admin"] },
+      { label: "Document Management", href: "/documents/management", roles: ["hr_admin", "super_admin"] },
     ],
   },
   {
     label: "Parking & Badges",
     icon: IconCar,
-    roles: ["employee", "hr", "manager", "admin"],
+    roles: ["employee", "hr_admin", "manager", "super_admin"],
     children: [
-      { label: "Parking Cards", href: "/access/parking", roles: ["employee", "hr", "manager", "admin"] },
-      { label: "ID Badges", href: "/access/badges", roles: ["employee", "hr", "manager", "admin"] },
-      { label: "Access Management", href: "/access/management", roles: ["hr", "admin"] },
+      { label: "Parking Cards", href: "/access/parking", roles: ["employee", "hr_admin", "manager", "super_admin"] },
+      { label: "ID Badges", href: "/access/badges", roles: ["employee", "hr_admin", "manager", "super_admin"] },
+      { label: "Access Management", href: "/access/management", roles: ["hr_admin", "super_admin"] },
     ],
   },
   {
-    label: "Announcements",
-    href: "/announcements",
+    label: "Anuncios",
     icon: IconMegaphone,
-    roles: ["employee", "hr", "manager", "admin"],
+    roles: ["employee", "hr_admin", "manager", "super_admin"],
+    children: [
+      { label: "Tablón de anuncios", href: "/announcements", roles: ["employee", "hr_admin", "manager", "super_admin"] },
+      { label: "Gestión de anuncios", href: "/announcements/management", roles: ["hr_admin", "super_admin"] },
+    ],
   },
   {
     label: "Reports",
     icon: IconChartBar,
-    roles: ["hr", "manager", "admin"],
+    roles: ["hr_admin", "manager", "super_admin"],
     children: [
-      { label: "Team Reports", href: "/reports/team", roles: ["manager", "hr", "admin"] },
-      { label: "HR Analytics", href: "/reports/analytics", roles: ["hr", "admin"] },
-      { label: "Headcount", href: "/reports/headcount", roles: ["hr", "admin"] },
+      { label: "Team Reports", href: "/reports/team", roles: ["manager", "hr_admin", "super_admin"] },
+      { label: "HR Analytics", href: "/reports/analytics", roles: ["hr_admin", "super_admin"] },
+      { label: "Headcount", href: "/reports/headcount", roles: ["hr_admin", "super_admin"] },
+      { label: "Bitácora de Auditoría", href: "/audit", roles: ["super_admin"] },
     ],
   },
   {
     label: "Feedback",
     icon: IconMessageSquare,
-    roles: ["employee", "hr", "manager", "admin"],
+    roles: ["employee", "hr_admin", "manager", "super_admin"],
     children: [
-      { label: "Suggestions", href: "/feedback/suggestions", roles: ["employee", "hr", "manager", "admin"] },
-      { label: "Recognition", href: "/feedback/recognition", roles: ["employee", "hr", "manager", "admin"] },
-      { label: "Surveys", href: "/feedback/surveys", roles: ["hr", "admin"] },
+      { label: "Suggestions", href: "/feedback/suggestions", roles: ["employee", "hr_admin", "manager", "super_admin"] },
+      { label: "Recognition", href: "/feedback/recognition", roles: ["employee", "hr_admin", "manager", "super_admin"] },
+      { label: "Surveys", href: "/feedback/surveys", roles: ["hr_admin", "super_admin"] },
     ],
   },
 ];
@@ -162,13 +162,13 @@ const bottomNavItems: NavItem[] = [
     label: "Settings",
     href: "/settings",
     icon: IconSettings,
-    roles: ["employee", "hr", "manager", "admin"],
+    roles: ["employee", "hr_admin", "manager", "super_admin"],
   },
   {
     label: "Help & Support",
     href: "/help",
     icon: IconHelpCircle,
-    roles: ["employee", "hr", "manager", "admin"],
+    roles: ["employee", "hr_admin", "manager", "super_admin"],
   },
 ];
 
@@ -180,7 +180,7 @@ interface SidebarProps {
 
 export function Sidebar({ userRole, isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
-  const [expandedItems, setExpandedItems] = useState<string[]>(["My Requests"]);
+  const [expandedItems, setExpandedItems] = useState<string[]>(["Solicitudes"]);
 
   const toggleExpand = (label: string) => {
     setExpandedItems((prev) =>
@@ -204,7 +204,7 @@ export function Sidebar({ userRole, isOpen, onClose }: SidebarProps) {
       {/* Mobile overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 dark:bg-black/50 z-40 lg:hidden bg-white"
           onClick={onClose}
           aria-hidden="true"
         />
@@ -212,7 +212,7 @@ export function Sidebar({ userRole, isOpen, onClose }: SidebarProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:sticky top-0 left-0 z-50 h-screen w-64 bg-sidebar text-sidebar-foreground flex flex-col transition-transform duration-300 lg:translate-x-0 ${
+        className={`fixed lg:sticky top-0 left-0 z-50 h-screen w-64 bg-sidebar dark:bg-sidebar-dark text-sidebar-foreground flex flex-col transition-transform duration-300 lg:translate-x-0 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -222,8 +222,8 @@ export function Sidebar({ userRole, isOpen, onClose }: SidebarProps) {
             <span className="text-lg font-bold text-white">RH</span>
           </div>
           <div className="min-w-0">
-            <h1 className="text-base font-bold text-white truncate">Portal RH</h1>
-            <p className="text-xs text-sidebar-foreground/70 truncate">Human Resources</p>
+            <h1 className="text-base font-bold text-black dark:text-white truncate">Portal RH</h1>
+            <p className="text-xs text-black dark:text-white truncate">Human Resources</p>
           </div>
         </div>
 
@@ -238,8 +238,8 @@ export function Sidebar({ userRole, isOpen, onClose }: SidebarProps) {
                       onClick={() => toggleExpand(item.label)}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                         isItemActive(item)
-                          ? "bg-sidebar-muted text-white"
-                          : "text-sidebar-foreground/80 hover:bg-sidebar-muted hover:text-white"
+                          ? "dark:bg-sidebar-muted text-black dark:text-white"
+                          : "text-black dark:text-white hover:text-white hover:bg-red-500 dark:hover:bg-sidebar-muted"
                       }`}
                     >
                       <item.icon className="w-5 h-5 shrink-0" />
@@ -261,8 +261,8 @@ export function Sidebar({ userRole, isOpen, onClose }: SidebarProps) {
                                 onClick={onClose}
                                 className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
                                   pathname === child.href
-                                    ? "bg-sidebar-accent text-white"
-                                    : "text-sidebar-foreground/70 hover:bg-sidebar-muted hover:text-white"
+                                    ? "bg-sidebar-accent text-black dark:text-white"
+                                    : "text-black dark:text-white hover:bg-red-500 dark:hover:bg-sidebar-muted hover:text-white"
                                 }`}
                               >
                                 {child.label}
@@ -278,8 +278,8 @@ export function Sidebar({ userRole, isOpen, onClose }: SidebarProps) {
                     onClick={onClose}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                       pathname === item.href
-                        ? "bg-sidebar-accent text-white"
-                        : "text-sidebar-foreground/80 hover:bg-sidebar-muted hover:text-white"
+                        ? "bg-sidebar-accent text-white dark:text-white"
+                        : " text-black dark:text-white hover:text-white"
                     }`}
                   >
                     <item.icon className="w-5 h-5 shrink-0" />
@@ -301,8 +301,8 @@ export function Sidebar({ userRole, isOpen, onClose }: SidebarProps) {
                   onClick={onClose}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     pathname === item.href
-                      ? "bg-sidebar-accent text-white"
-                      : "text-sidebar-foreground/80 hover:bg-sidebar-muted hover:text-white"
+                      ? "bg-sidebar-accent text-black dark:text-white"
+                      : "hover:bg-red-500 dark:hover:bg-sidebar-muted hover:text-white"
                   }`}
                 >
                   <item.icon className="w-5 h-5 shrink-0" />

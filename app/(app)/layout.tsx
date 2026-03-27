@@ -4,29 +4,20 @@ import { useState, useEffect, type ReactNode } from "react";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
-
-// Mock user data - in a real app, this would come from auth context
-const mockUser = {
-  name: "Maria Garcia",
-  email: "maria.garcia@company.com",
-  role: "Employee",
-  avatar: undefined,
-};
-
-type UserRole = "employee" | "hr" | "manager" | "admin";
+import { useSession } from "@/modules/auth/context";
+import { logout } from "@/modules/auth/actions";
+import { getFullName, ROLE_LABELS } from "@/modules/auth/types";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
+  const { user, profile } = useSession();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  // Demo: change this to "hr", "manager", or "admin" to see different navigation
-  const [userRole] = useState<UserRole>("employee");
 
   useEffect(() => {
-    // Check system preference and stored preference
     const stored = localStorage.getItem("theme");
     const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     const shouldBeDark = stored === "dark" || (!stored && systemDark);
-    
+
     setIsDarkMode(shouldBeDark);
     if (shouldBeDark) {
       document.documentElement.classList.add("dark");
@@ -44,22 +35,32 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     }
   };
 
+  const sidebarRole = profile?.role ?? "employee";
+
+  const headerUser = {
+    name: profile ? getFullName(profile) : (user?.email ?? ""),
+    email: user?.email ?? "",
+    role: profile ? ROLE_LABELS[profile.role] : "Colaborador",
+    avatar: profile?.avatar_url ?? undefined,
+  };
+
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       <Sidebar
-        userRole={userRole}
+        userRole={sidebarRole}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
-      
+
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header
-          user={{ ...mockUser, role: userRole.charAt(0).toUpperCase() + userRole.slice(1) }}
+          user={headerUser}
           onMenuClick={() => setSidebarOpen(true)}
           isDarkMode={isDarkMode}
           onToggleDarkMode={toggleDarkMode}
+          onLogout={logout}
         />
-        
+
         <main className="flex-1 overflow-y-auto">
           <div className="p-4 lg:p-6 space-y-4 lg:space-y-6">
             <Breadcrumbs />

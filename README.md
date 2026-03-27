@@ -34,3 +34,34 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Seed de usuarios demo (dev)
+
+Para crear un usuario demo por cada rol (`employee`, `manager`, `hr_admin`, `super_admin`) usando Supabase Auth + `profiles`:
+
+1. Define variables en tu entorno local:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54324
+SUPABASE_SERVICE_ROLE_KEY=TU_SERVICE_ROLE_KEY
+DEMO_USERS_PASSWORD=Demo1234!
+```
+
+2. Ejecuta el seeder:
+
+```bash
+npm run seed:demo-users
+```
+
+Usuarios creados (o reutilizados si ya existen):
+
+- `demo.employee@portalrh.local`
+- `demo.manager@portalrh.local`
+- `demo.hr@portalrh.local`
+- `demo.super@portalrh.local`
+
+Notas:
+
+- El script es idempotente: si ya existen, los reutiliza y actualiza su `profile`.
+- Se enlaza `manager_id` para que el `employee` reporte al `manager` y el `manager` al `hr_admin`.
+- Requiere `SUPABASE_SERVICE_ROLE_KEY` porque crea usuarios en `auth.users`.
