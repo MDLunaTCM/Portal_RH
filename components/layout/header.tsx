@@ -41,7 +41,7 @@ export function Header({ user, onMenuClick, isDarkMode, onToggleDarkMode, onLogo
   const unreadCount = notifications.filter((n) => n.unread).length;
 
   return (
-    <header className="h-16 bg-primary text-header-foreground flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30">
+    <header className="h-16 bg-primary/95 backdrop-blur-sm text-header-foreground flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30 border-b border-primary/20">
       {/* Left section */}
       <div className="flex items-center gap-4">
         <button
@@ -53,7 +53,7 @@ export function Header({ user, onMenuClick, isDarkMode, onToggleDarkMode, onLogo
         </button>
 
         {/* Search */}
-        <div className="hidden md:flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2 min-w-[300px]">
+        <div className="hidden md:flex items-center gap-2 bg-white/10 hover:bg-white/15 rounded-xl px-3 py-2 min-w-[300px] transition-colors duration-200">
           <IconSearch className="w-4 h-4 text-white/70" />
           <input
             type="text"
@@ -70,7 +70,7 @@ export function Header({ user, onMenuClick, isDarkMode, onToggleDarkMode, onLogo
       <div className="flex items-center gap-2">
         {/* Mobile search button */}
         <button
-          className="md:hidden p-2 hover:bg-white/10 rounded-lg transition-colors"
+          className="md:hidden p-2.5 hover:bg-white/10 rounded-xl transition-colors active:scale-95"
           aria-label="Search"
         >
           <IconSearch className="w-5 h-5" />
@@ -79,7 +79,7 @@ export function Header({ user, onMenuClick, isDarkMode, onToggleDarkMode, onLogo
         {/* Theme toggle */}
         <button
           onClick={onToggleDarkMode}
-          className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
+          className="p-2.5 hover:bg-white/10 rounded-xl transition-all active:scale-95 text-white"
           aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
         >
           {isDarkMode ? <IconSun className="w-5 h-5" /> : <IconMoon className="w-5 h-5" />}
@@ -92,7 +92,7 @@ export function Header({ user, onMenuClick, isDarkMode, onToggleDarkMode, onLogo
               setShowNotifications(!showNotifications);
               setShowProfile(false);
             }}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors relative text-white"
+            className="p-2.5 hover:bg-white/10 rounded-xl transition-all active:scale-95 relative text-white"
             aria-label="Notifications"
           >
             <IconBell className="w-5 h-5" />
@@ -104,7 +104,7 @@ export function Header({ user, onMenuClick, isDarkMode, onToggleDarkMode, onLogo
           </button>
 
           {showNotifications && (
-            <div className="absolute right-0 top-full mt-2 w-80 bg-card text-card-foreground rounded-lg shadow-xl border border-border overflow-hidden">
+            <div className="absolute right-0 top-full mt-2 w-80 bg-card text-card-foreground rounded-xl shadow-lg border border-border/50 overflow-hidden animate-slide-in">
               <div className="p-4 border-b border-border flex items-center justify-between">
                 <h3 className="font-semibold">Notifications</h3>
                 <button className="text-xs text-primary hover:underline">Mark all as read</button>
@@ -160,7 +160,7 @@ export function Header({ user, onMenuClick, isDarkMode, onToggleDarkMode, onLogo
           </button>
 
           {showProfile && (
-            <div className="absolute right-0 top-full mt-2 w-64 bg-card text-card-foreground rounded-lg shadow-xl border border-border overflow-hidden">
+            <div className="absolute right-0 top-full mt-2 w-64 bg-card text-card-foreground rounded-xl shadow-lg border border-border/50 overflow-hidden animate-slide-in">
               <div className="p-4 border-b border-border">
                 <div className="flex items-center gap-3">
                   <Avatar fallback={user.name} size="lg" src={user.avatar} />
@@ -174,14 +174,14 @@ export function Header({ user, onMenuClick, isDarkMode, onToggleDarkMode, onLogo
               <div className="p-2">
                 <Link
                   href="/profile"
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted text-sm transition-colors"
+                  className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-sm transition-colors active:scale-95"
                 >
                   <IconUsers className="w-4 h-4" />
                   My Profile
                 </Link>
                 <Link
                   href="/settings"
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted text-sm transition-colors"
+                  className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-sm transition-colors active:scale-95"
                 >
                   <IconSettings className="w-4 h-4" />
                   Settings
@@ -190,7 +190,7 @@ export function Header({ user, onMenuClick, isDarkMode, onToggleDarkMode, onLogo
               <div className="p-2 border-t border-border">
                 <button
                   onClick={() => onLogout()}
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted text-sm transition-colors w-full text-error-foreground"
+                  className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-destructive/10 text-sm transition-colors w-full text-destructive active:scale-95"
                 >
                   <IconLogout className="w-4 h-4" />
                   Sign out

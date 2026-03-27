@@ -218,7 +218,7 @@ export function Sidebar({ userRole, isOpen, onClose }: SidebarProps) {
       >
         {/* Logo */}
         <div className="h-16 flex items-center gap-3 px-4 border-b border-white/10">
-          <div className="w-10 h-10 rounded-lg bg-sidebar-accent flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-sidebar-accent flex items-center justify-center shrink-0 shadow-md">
             <span className="text-lg font-bold text-white">RH</span>
           </div>
           <div className="min-w-0">
@@ -236,10 +236,10 @@ export function Sidebar({ userRole, isOpen, onClose }: SidebarProps) {
                   <div>
                     <button
                       onClick={() => toggleExpand(item.label)}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all active:scale-95 ${
                         isItemActive(item)
-                          ? "dark:bg-sidebar-muted text-black dark:text-white"
-                          : "text-black dark:text-white hover:text-white hover:bg-red-500 dark:hover:bg-sidebar-muted"
+                          ? "bg-sidebar-accent/10 dark:bg-sidebar-accent/20 text-sidebar-accent dark:text-white font-semibold"
+                          : "text-black dark:text-white hover:bg-sidebar-accent/5 dark:hover:bg-sidebar-accent/10"
                       }`}
                     >
                       <item.icon className="w-5 h-5 shrink-0" />
@@ -259,10 +259,10 @@ export function Sidebar({ userRole, isOpen, onClose }: SidebarProps) {
                               <Link
                                 href={child.href}
                                 onClick={onClose}
-                                className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
+                                className={`block px-3 py-2 rounded-lg text-sm transition-all active:scale-95 ${
                                   pathname === child.href
-                                    ? "bg-sidebar-accent text-black dark:text-white"
-                                    : "text-black dark:text-white hover:bg-red-500 dark:hover:bg-sidebar-muted hover:text-white"
+                                    ? "bg-sidebar-accent/15 dark:bg-sidebar-accent/25 text-sidebar-accent dark:text-white font-medium"
+                                    : "text-black dark:text-white hover:bg-sidebar-accent/5 dark:hover:bg-sidebar-accent/10"
                                 }`}
                               >
                                 {child.label}
@@ -276,10 +276,10 @@ export function Sidebar({ userRole, isOpen, onClose }: SidebarProps) {
                   <Link
                     href={item.href!}
                     onClick={onClose}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all active:scale-95 ${
                       pathname === item.href
-                        ? "bg-sidebar-accent text-white dark:text-white"
-                        : " text-black dark:text-white hover:text-white"
+                        ? "bg-sidebar-accent/10 dark:bg-sidebar-accent/20 text-sidebar-accent dark:text-white font-semibold"
+                        : "text-black dark:text-white hover:bg-sidebar-accent/5 dark:hover:bg-sidebar-accent/10"
                     }`}
                   >
                     <item.icon className="w-5 h-5 shrink-0" />
@@ -299,10 +299,10 @@ export function Sidebar({ userRole, isOpen, onClose }: SidebarProps) {
                 <Link
                   href={item.href!}
                   onClick={onClose}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all active:scale-95 ${
                     pathname === item.href
-                      ? "bg-sidebar-accent text-black dark:text-white"
-                      : "hover:bg-red-500 dark:hover:bg-sidebar-muted hover:text-white"
+                      ? "bg-sidebar-accent/10 dark:bg-sidebar-accent/20 text-sidebar-accent dark:text-white font-semibold"
+                      : "text-black dark:text-white hover:bg-sidebar-accent/5 dark:hover:bg-sidebar-accent/10"
                   }`}
                 >
                   <item.icon className="w-5 h-5 shrink-0" />

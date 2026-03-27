@@ -41,7 +41,7 @@ export function Modal({ isOpen, onClose, title, description, children, footer, s
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className={`relative bg-card rounded-xl shadow-2xl w-full ${modalSizes[size]} max-h-[90vh] flex flex-col animate-in fade-in zoom-in-95 duration-200`}>
+      <div className={`relative bg-card rounded-xl shadow-2xl w-full ${modalSizes[size]} max-h-[90vh] flex flex-col animate-scale-in border border-border/50`}>
         <div className="flex items-start justify-between p-6 border-b border-border">
           <div>
             <h2 className="text-lg font-semibold text-foreground">{title}</h2>
@@ -49,7 +49,7 @@ export function Modal({ isOpen, onClose, title, description, children, footer, s
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-muted rounded-lg transition-colors text-muted-foreground hover:text-foreground"
+            className="p-2 hover:bg-muted rounded-lg transition-all active:scale-95 text-muted-foreground hover:text-foreground"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -94,15 +94,15 @@ export function Drawer({ isOpen, onClose, title, children, footer, position = "r
     <div className="fixed inset-0 z-50">
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div
-        className={`fixed top-0 ${position === "right" ? "right-0" : "left-0"} h-full w-full max-w-md bg-card shadow-2xl flex flex-col animate-in ${
-          position === "right" ? "slide-in-from-right" : "slide-in-from-left"
-        } duration-300`}
+        className={`fixed top-0 ${position === "right" ? "right-0" : "left-0"} h-full w-full max-w-md bg-card shadow-2xl flex flex-col ${
+          position === "right" ? "animate-slide-in" : "animate-slide-in"
+        } border border-border/50`}
       >
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h2 className="text-lg font-semibold text-foreground">{title}</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-muted rounded-lg transition-colors text-muted-foreground hover:text-foreground"
+            className="p-2 hover:bg-muted rounded-lg transition-all active:scale-95 text-muted-foreground hover:text-foreground"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -285,9 +285,9 @@ export function Select({ options, value, onChange, placeholder = "Select...", la
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full h-10 px-3 flex items-center justify-between text-sm rounded-md border bg-background transition-colors ${
+        className={`w-full h-10 px-3 flex items-center justify-between text-sm rounded-lg border bg-background transition-all ${
           error ? "border-error-foreground" : "border-input hover:border-muted-foreground"
-        } ${isOpen ? "ring-2 ring-ring" : ""}`}
+        } ${isOpen ? "ring-2 ring-primary/20" : ""}`}
       >
         <span className={selectedOption ? "text-foreground" : "text-muted-foreground"}>
           {selectedOption?.label || placeholder}
@@ -297,7 +297,7 @@ export function Select({ options, value, onChange, placeholder = "Select...", la
         </svg>
       </button>
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-card border border-border rounded-md shadow-lg max-h-60 overflow-y-auto">
+        <div className="absolute z-50 w-full mt-1 bg-card border border-border/50 rounded-lg shadow-lg max-h-60 overflow-y-auto animate-slide-in">
           {options.map((option) => (
             <button
               key={option.value}
@@ -306,8 +306,8 @@ export function Select({ options, value, onChange, placeholder = "Select...", la
                 onChange(option.value);
                 setIsOpen(false);
               }}
-              className={`w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors ${
-                option.value === value ? "bg-primary/10 text-primary" : "text-foreground"
+              className={`w-full px-3 py-2 text-sm text-left hover:bg-muted transition-all ${
+                option.value === value ? "bg-primary/15 text-primary font-medium" : "text-foreground"
               }`}
             >
               {option.label}
@@ -372,8 +372,8 @@ export function FileUpload({
           handleFiles(e.dataTransfer.files);
         }}
         onClick={() => inputRef.current?.click()}
-        className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
-          isDragging ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"
+        className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-all ${
+          isDragging ? "border-primary bg-primary/10 shadow-md" : "border-border hover:border-primary/50 hover:bg-primary/5"
         }`}
       >
         <input
@@ -461,7 +461,7 @@ export function Textarea({ label, error, helperText, className = "", ...props }:
     <div className="flex flex-col gap-1.5">
       {label && <label className="text-sm font-medium text-foreground">{label}</label>}
       <textarea
-        className={`w-full rounded-md border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring min-h-[100px] resize-y ${
+        className={`w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 min-h-[100px] resize-y transition-all ${
           error ? "border-error-foreground" : "border-input"
         } ${className}`}
         {...props}
@@ -491,7 +491,7 @@ export function Checkbox({ checked, onChange, label, description, className = ""
           onChange={(e) => onChange(e.target.checked)}
           className="peer sr-only"
         />
-        <div className="w-5 h-5 border-2 border-input rounded bg-background peer-checked:bg-primary peer-checked:border-primary transition-colors flex items-center justify-center">
+        <div className="w-5 h-5 border-2 border-input rounded-md bg-background peer-checked:bg-primary peer-checked:border-primary transition-all flex items-center justify-center">
           {checked && (
             <svg className="w-3 h-3 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -567,7 +567,7 @@ export function SearchInput({ value, onChange, placeholder = "Search...", classN
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full h-10 pl-10 pr-4 rounded-md border border-input bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+        className="w-full h-10 pl-10 pr-4 rounded-lg border border-input bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
       />
       {value && (
         <button
@@ -660,12 +660,12 @@ export function DataTable<T>({
   return (
     <div className={`overflow-x-auto ${className}`}>
       <table className="w-full">
-        <thead>
-          <tr className="border-b border-border">
+        <thead className="bg-muted/30">
+          <tr className="border-b border-border/50">
             {columns.map((col) => (
               <th
                 key={String(col.key)}
-                className={`px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider ${col.className || ""}`}
+                className={`px-4 py-3 text-left text-xs font-semibold text-foreground uppercase tracking-wider ${col.className || ""}`}
               >
                 {col.header}
               </th>
@@ -677,7 +677,7 @@ export function DataTable<T>({
             <tr
               key={keyExtractor(item)}
               onClick={() => onRowClick?.(item)}
-              className={`${onRowClick ? "cursor-pointer hover:bg-muted/50" : ""} transition-colors`}
+              className={`${onRowClick ? "cursor-pointer hover:bg-muted/50" : ""} transition-all border-border/50`}
             >
               {columns.map((col) => (
                 <td key={String(col.key)} className={`px-4 py-3 text-sm ${col.className || ""}`}>

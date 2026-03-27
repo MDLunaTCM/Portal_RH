@@ -32,21 +32,21 @@ interface StatsCardProps {
 
 export function StatsCard({ title, value, change, icon: Icon, href }: StatsCardProps) {
   const content = (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="hover-lift hover:border-primary/50">
       <CardContent className="p-6">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{value}</p>
+            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">{title}</p>
+            <p className="text-3xl font-bold text-foreground mt-2">{value}</p>
             {change && (
-              <div className={`flex items-center gap-1 mt-2 text-xs ${change.value >= 0 ? "text-success-foreground" : "text-error-foreground"}`}>
-                {change.value >= 0 ? <IconTrendingUp className="w-3 h-3" /> : <IconTrendingDown className="w-3 h-3" />}
+              <div className={`flex items-center gap-1 mt-3 text-xs font-medium ${change.value >= 0 ? "text-success-foreground" : "text-error-foreground"}`}>
+                {change.value >= 0 ? <IconTrendingUp className="w-4 h-4" /> : <IconTrendingDown className="w-4 h-4" />}
                 <span>{change.value >= 0 ? "+" : ""}{change.value}% {change.label}</span>
               </div>
             )}
           </div>
-          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Icon className="w-5 h-5 text-primary" />
+          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Icon className="w-6 h-6 text-primary" />
           </div>
         </div>
       </CardContent>
@@ -75,21 +75,21 @@ export function QuickActions({ actions }: QuickActionsProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Quick Actions</CardTitle>
-        <CardDescription>Frequently used actions</CardDescription>
+        <CardTitle>Acciones Rápidas</CardTitle>
+        <CardDescription>Acciones más utilizadas</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {actions.map((action) => (
             <Link
               key={action.href}
               href={action.href}
-              className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:border-primary hover:bg-accent/50 transition-colors group"
+              className="flex flex-col items-center gap-3 p-4 rounded-xl border border-border hover:border-primary/30 hover:bg-primary/5 transition-all hover-lift group active:scale-95"
             >
-              <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                <action.icon className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center group-hover:bg-primary/15 transition-all shadow-sm group-hover:shadow-md">
+                <action.icon className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
               </div>
-              <span className="text-sm font-medium text-center">{action.label}</span>
+              <span className="text-sm font-medium text-center leading-tight">{action.label}</span>
             </Link>
           ))}
         </div>
@@ -144,7 +144,7 @@ export function PendingRequests({ requests, showViewAll = true }: PendingRequest
             {requests.map((request) => (
               <div
                 key={request.id}
-                className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+                className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-muted/60 hover:border-primary/30 transition-all"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
@@ -186,16 +186,16 @@ export function VacationBalance({ used, total, pending }: VacationBalanceProps) 
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <IconCalendar className="w-5 h-5 text-primary" />
-          Vacation Balance
+          Saldo de Vacaciones
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-5">
         <div className="grid grid-cols-3 gap-4 text-center">
-          <div>
-            <p className="text-2xl font-bold text-foreground">{remaining}</p>
-            <p className="text-xs text-muted-foreground">Available</p>
+          <div className="p-3 rounded-lg bg-success/10">
+            <p className="text-2xl font-bold text-success-foreground">{remaining}</p>
+            <p className="text-xs text-muted-foreground font-medium mt-1">Disponibles</p>
           </div>
-          <div>
+          <div className="p-3 rounded-lg bg-warning/10">
             <p className="text-2xl font-bold text-warning-foreground">{pending}</p>
             <p className="text-xs text-muted-foreground">Pending</p>
           </div>
