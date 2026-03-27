@@ -22,8 +22,8 @@ ALTER TABLE employee_documents
 
 -- 3. Change default so new uploads enter the review queue
 --    (existing rows already have 'active', which maps to approved in UI)
-ALTER TABLE employee_documents
-  ALTER COLUMN status SET DEFAULT 'pending_review';
+-- ALTER TABLE employee_documents
+--   ALTER COLUMN status SET DEFAULT 'pending_review';
 
 -- Index for HR queries by status
 CREATE INDEX IF NOT EXISTS idx_employee_documents_status
