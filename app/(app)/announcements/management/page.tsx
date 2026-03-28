@@ -61,12 +61,14 @@ const ROLE_LABELS: Record<UserRoleEnum, string> = {
 async function uploadMediaFiles(files: File[], announcementId: string) {
   if (!files.length) return [];
 
+  type UploadedMediaItem = NonNullable<AnnouncementInput["media"]>[number];
+
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  const uploaded = [];
+  const uploaded: UploadedMediaItem[] = [];
   for (const file of files) {
     const isImage = file.type.startsWith("image/");
     const isVideo = file.type.startsWith("video/");
@@ -201,6 +203,7 @@ function AnnouncementForm({ initial, onSubmit, isPending, error }: AnnouncementF
       pinned,
       expires_at: expiresAt || null,
       publish_immediately: publishImmediately,
+      media_files: mediaFiles,
     });
   };
 
@@ -383,14 +386,12 @@ export default function AnnouncementsManagementPage() {
   function openCreate() {
     setEditingAnnouncement(null);
     setFormError(null);
-    setMediaFiles([]);
     setModalOpen(true);
   }
 
   function openEdit(a: HRAnnouncement) {
     setEditingAnnouncement(a);
     setFormError(null);
-    setMediaFiles([]);
     setModalOpen(true);
   }
 
@@ -399,17 +400,18 @@ export default function AnnouncementsManagementPage() {
       setModalOpen(false);
       setEditingAnnouncement(null);
       setFormError(null);
-      setMediaFiles([]);
     }
   }
 
-  function handleFormSubmit(values: AnnouncementInput & { publish_immediately?: boolean }) {
+  function handleFormSubmit(
+    values: AnnouncementInput & { publish_immediately?: boolean; media_files?: File[] },
+  ) {
     setFormError(null);
     startTransition(async () => {
       try {
         // Upload media files first if any
         const uploadedMedia = await uploadMediaFiles(
-          mediaFiles,
+          values.media_files ?? [],
           editingAnnouncement?.id || "new"
         );
 
@@ -453,7 +455,6 @@ export default function AnnouncementsManagementPage() {
         }
         setModalOpen(false);
         setEditingAnnouncement(null);
-        setMediaFiles([]);
         refetch();
         allDocs.refetch();
       } catch (err) {

@@ -27,6 +27,7 @@ export type DocumentStatusEnum =
   | "expired"        // document past its expiry date
   | "revoked";       // HR rejected / revoked
 export type PublishStatusEnum = "draft" | "published" | "archived";
+export type AnnouncementPriorityEnum = "normal" | "important" | "urgent";
 export type AuditActionEnum =
   | "login"
   | "logout"
@@ -406,6 +407,10 @@ export interface Database {
           body: string;
           category: string;
           target_roles: UserRoleEnum[];
+          featured_image_url: string | null;
+          featured_image_alt: string | null;
+          media: Json | null;
+          priority: AnnouncementPriorityEnum | null;
           status: PublishStatusEnum;
           pinned: boolean;
           published_at: string | null;
@@ -420,6 +425,10 @@ export interface Database {
           body: string;
           category?: string;
           target_roles?: UserRoleEnum[];
+          featured_image_url?: string | null;
+          featured_image_alt?: string | null;
+          media?: Json | null;
+          priority?: AnnouncementPriorityEnum | null;
           status?: PublishStatusEnum;
           pinned?: boolean;
           published_at?: string | null;
@@ -434,6 +443,10 @@ export interface Database {
           body?: string;
           category?: string;
           target_roles?: UserRoleEnum[];
+          featured_image_url?: string | null;
+          featured_image_alt?: string | null;
+          media?: Json | null;
+          priority?: AnnouncementPriorityEnum | null;
           status?: PublishStatusEnum;
           pinned?: boolean;
           published_at?: string | null;

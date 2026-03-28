@@ -99,7 +99,7 @@ export function FeedPost({ announcement }: FeedPostProps) {
                     : "General"}
               </Badge>
               {announcement.category && (
-                <Badge variant="secondary" className="shrink-0">
+                <Badge variant="default" className="shrink-0">
                   {announcement.category}
                 </Badge>
               )}
