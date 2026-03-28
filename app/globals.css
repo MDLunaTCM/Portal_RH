@@ -353,6 +353,72 @@ body {
   .divider {
     @apply border-t border-border;
   }
+
+  /* === Facebook-style Feed Post === */
+
+  .feed-post-card {
+    @apply w-full bg-card border border-border rounded-lg overflow-hidden transition-all duration-200 hover:shadow-lg hover:border-primary/30 mb-6;
+  }
+
+  .feed-post-header {
+    @apply px-5 pt-4 pb-3 border-b border-border/50;
+  }
+
+  .feed-post-author-avatar {
+    @apply w-12 h-12 rounded-full bg-primary/20 flex-shrink-0;
+  }
+
+  .feed-post-author-name {
+    @apply text-sm font-semibold text-foreground;
+  }
+
+  .feed-post-timestamp {
+    @apply text-xs text-muted-foreground;
+  }
+
+  .feed-post-title-section {
+    @apply px-5 pt-5 pb-3;
+  }
+
+  .feed-post-title {
+    @apply text-2xl font-bold text-foreground leading-tight;
+  }
+
+  .feed-post-body {
+    @apply px-5 py-4;
+  }
+
+  .feed-post-content {
+    @apply text-base text-foreground leading-relaxed whitespace-pre-wrap break-words;
+  }
+
+  .feed-post-media {
+    @apply w-full max-h-96 overflow-hidden;
+  }
+
+  .feed-post-expiration {
+    @apply px-5 py-3 bg-warning/10 border-t border-warning/30 flex items-center gap-2 text-xs font-medium text-warning-foreground;
+  }
+
+  .feed-post-stats {
+    @apply px-5 py-3 border-t border-border/50 bg-muted/30;
+  }
+
+  .feed-post-actions {
+    @apply flex items-center justify-between border-t border-border/50 bg-card;
+  }
+
+  .feed-post-action-btn {
+    @apply flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors duration-150 border-r border-border/30 last:border-r-0;
+  }
+
+  .feed-post-action-btn:hover {
+    @apply text-primary;
+  }
+
+  .feed-post-action-active {
+    @apply text-primary font-semibold;
+  }
 }
 
 /* === Animations === */

@@ -10,7 +10,7 @@ import {
   Skeleton,
   EmptyState,
 } from "@/components/ui";
-import { Select, Modal } from "@/components/ui/shared";
+import { Select } from "@/components/ui/shared";
 import {
   IconSearch,
   IconAlertCircle,
@@ -23,7 +23,6 @@ import {
   type BoardAnnouncement,
 } from "@/modules/announcements/hooks/use-announcements-board";
 import { FeedPost } from "@/components/announcements/FeedPost";
-import { FeaturedPostBanner } from "@/components/announcements/FeaturedPostBanner";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -31,25 +30,9 @@ import { FeaturedPostBanner } from "@/components/announcements/FeaturedPostBanne
 
 const CATEGORIES = ["General", "Eventos", "Beneficios", "Avisos", "Urgente"] as const;
 
-const CATEGORY_VARIANT: Record<string, "default" | "success" | "warning" | "error" | "info"> = {
-  General:    "info",
-  Eventos:    "success",
-  Beneficios: "default",
-  Avisos:     "warning",
-  Urgente:    "error",
-};
-
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function formatDate(isoDate: string): string {
-  return new Date(isoDate).toLocaleDateString("es-MX", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}
 
 function isExpiringSoon(expiresAt: string | null): boolean {
   if (!expiresAt) return false;
@@ -120,7 +103,6 @@ export default function AnnouncementsPage() {
 
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
-  const [selected, setSelected] = useState<BoardAnnouncement | null>(null);
 
   const filtered = useMemo(() => {
     let result = announcements;
@@ -220,82 +202,17 @@ export default function AnnouncementsPage() {
               }
             />
           ) : (
-            <div className="max-w-2xl mx-auto w-full space-y-4">
+            <div className="max-w-3xl mx-auto w-full">
               {filtered.map((a) => (
                 <FeedPost
                   key={a.id}
                   announcement={a}
-                  onClick={() => setSelected(a)}
                 />
               ))}
             </div>
           )}
         </>
       )}
-
-      {/* Detail modal */}
-      <Modal
-        isOpen={!!selected}
-        onClose={() => setSelected(null)}
-        title={selected?.title ?? ""}
-        size="lg"
-      >
-        {selected && (
-          <div className="space-y-6 px-6 pb-6">
-            {/* Badges */}
-            <div className="flex flex-wrap gap-2">
-              <Badge variant={CATEGORY_VARIANT[selected.category] ?? "default"}>
-                {selected.category}
-              </Badge>
-              {selected.pinned && <Badge variant="warning">Fijado</Badge>}
-              {selected.priority && (
-                <Badge
-                  variant={
-                    selected.priority === "urgent"
-                      ? "error"
-                      : selected.priority === "important"
-                        ? "warning"
-                        : "default"
-                  }
-                >
-                  {selected.priority === "urgent"
-                    ? "Urgente"
-                    : selected.priority === "important"
-                      ? "Importante"
-                      : "General"}
-                </Badge>
-              )}
-            </div>
-
-            {/* Metadata */}
-            <p className="text-sm text-muted-foreground">
-              Publicado el {formatDate(selected.publishedAt)}
-              {selected.expiresAt && (
-                <> · Vence el {formatDate(selected.expiresAt)}</>
-              )}
-            </p>
-
-            {/* Media Gallery */}
-            {(selected.featured_image_url || selected.media?.length) && (
-              <div className="rounded-lg overflow-hidden">
-                {/* Import MediaGallery at top and use it here */}
-                <img
-                  src={selected.featured_image_url || selected.media?.[0]?.url || ""}
-                  alt={selected.featured_image_alt || "Featured image"}
-                  className="w-full h-auto max-h-96 object-cover rounded-lg"
-                />
-              </div>
-            )}
-
-            {/* Body */}
-            <div className="pt-2 border-t border-border">
-              <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                {selected.body}
-              </p>
-            </div>
-          </div>
-        )}
-      </Modal>
     </div>
   );
 }
