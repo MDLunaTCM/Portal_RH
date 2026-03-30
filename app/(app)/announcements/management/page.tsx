@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/client";
 import {
   Card,
   CardContent,
@@ -63,10 +63,7 @@ async function uploadMediaFiles(files: File[], announcementId: string) {
 
   type UploadedMediaItem = NonNullable<AnnouncementInput["media"]>[number];
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = createClient();
 
   const uploaded: UploadedMediaItem[] = [];
   for (const file of files) {
@@ -75,14 +72,17 @@ async function uploadMediaFiles(files: File[], announcementId: string) {
     if (!isImage && !isVideo) continue;
 
     const fileExt = file.name.split(".").pop()?.toLowerCase() || "";
-    const fileName = `${announcementId}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-    const bucketPath = `announcements/${fileName}`;
+    // Path inside the bucket — no need to repeat the bucket name here
+    const storagePath = `${announcementId}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
 
     const { data, error } = await supabase.storage
       .from("announcements")
-      .upload(bucketPath, file, { cacheControl: "3600", upsert: false });
+      .upload(storagePath, file, { cacheControl: "3600", upsert: false });
 
-    if (error) continue;
+    if (error) {
+      console.error("[uploadMediaFiles] upload error:", error.message);
+      continue;
+    }
 
     const {
       data: { publicUrl },
@@ -409,13 +409,7 @@ export default function AnnouncementsManagementPage() {
     setFormError(null);
     startTransition(async () => {
       try {
-        // Upload media files first if any
-        const uploadedMedia = await uploadMediaFiles(
-          values.media_files ?? [],
-          editingAnnouncement?.id || "new"
-        );
-
-        const inputData: AnnouncementInput & { publish_immediately?: boolean } = {
+        const baseInput: AnnouncementInput & { publish_immediately?: boolean } = {
           title: values.title,
           body: values.body,
           category: values.category,
@@ -425,34 +419,51 @@ export default function AnnouncementsManagementPage() {
           publish_immediately: values.publish_immediately,
         };
 
-        if (uploadedMedia.length > 0) {
-          inputData.media = uploadedMedia;
-          const firstImage = uploadedMedia.find((m) => m.type === "image");
-          if (firstImage) {
-            inputData.featured_image_url = firstImage.url;
-            inputData.featured_image_alt = firstImage.alt;
-          }
-        }
-
         if (editingAnnouncement) {
-          const res = await updateAnnouncement(editingAnnouncement.id, inputData);
-          if (res.error) {
-            setFormError(res.error);
-            return;
+          // ── UPDATE: upload with real ID, then save ──────────────────────
+          const uploadedMedia = await uploadMediaFiles(
+            values.media_files ?? [],
+            editingAnnouncement.id,
+          );
+
+          if (uploadedMedia.length > 0) {
+            baseInput.media = uploadedMedia;
+            const firstImage = uploadedMedia.find((m) => m.type === "image");
+            if (firstImage) {
+              baseInput.featured_image_url = firstImage.url;
+              baseInput.featured_image_alt = firstImage.alt;
+            }
           }
+
+          const res = await updateAnnouncement(editingAnnouncement.id, baseInput);
+          if (res.error) { setFormError(res.error); return; }
           setSuccessMsg("Anuncio actualizado correctamente.");
+
         } else {
-          const res = await createAnnouncement(inputData);
-          if (res.error) {
-            setFormError(res.error);
-            return;
+          // ── CREATE: first create to get the real ID, then upload ────────
+          const res = await createAnnouncement(baseInput);
+          if (res.error || !res.id) { setFormError(res.error ?? "Error al crear el anuncio."); return; }
+
+          // Now upload using the real announcement ID
+          const uploadedMedia = await uploadMediaFiles(values.media_files ?? [], res.id);
+          if (uploadedMedia.length > 0) {
+            const firstImage = uploadedMedia.find((m) => m.type === "image");
+            await updateAnnouncement(res.id, {
+              media: uploadedMedia,
+              ...(firstImage && {
+                featured_image_url: firstImage.url,
+                featured_image_alt: firstImage.alt,
+              }),
+            });
           }
+
           setSuccessMsg(
             values.publish_immediately
               ? "Anuncio creado y publicado."
               : "Anuncio guardado como borrador.",
           );
         }
+
         setModalOpen(false);
         setEditingAnnouncement(null);
         refetch();

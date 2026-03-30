@@ -129,6 +129,16 @@ export interface BoardAnnouncementRow {
   published_at: string | null;
   expires_at: string | null;
   created_at: string;
+  priority: "normal" | "important" | "urgent" | null;
+  featured_image_url: string | null;
+  featured_image_alt: string | null;
+  media: Array<{
+    id: string;
+    type: "image" | "video";
+    url: string;
+    alt?: string;
+    thumbnail_url?: string;
+  }> | null;
 }
 
 export interface ListAnnouncementsBoardResult {
@@ -155,7 +165,7 @@ export async function listAnnouncementsBoard(): Promise<ListAnnouncementsBoardRe
   const { data, error } = await supabase
     .from("announcements")
     .select(
-      "id, title, body, category, target_roles, pinned, published_at, expires_at, created_at",
+      "id, title, body, category, target_roles, pinned, published_at, expires_at, created_at, priority, featured_image_url, featured_image_alt, media",
     )
     .eq("status", "published")
     .order("pinned", { ascending: false })
@@ -174,6 +184,10 @@ export async function listAnnouncementsBoard(): Promise<ListAnnouncementsBoardRe
       published_at: (row.published_at ?? row.created_at) as string | null,
       expires_at: row.expires_at as string | null,
       created_at: row.created_at,
+      priority: (row.priority as BoardAnnouncementRow["priority"]) ?? "normal",
+      featured_image_url: (row.featured_image_url as string | null) ?? null,
+      featured_image_alt: (row.featured_image_alt as string | null) ?? null,
+      media: (row.media as BoardAnnouncementRow["media"]) ?? null,
     })),
     error: null,
   };

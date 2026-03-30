@@ -83,6 +83,10 @@ export function useAnnouncementsBoard(userRole: UserRole | null) {
             publishedAt: (row.published_at ?? row.created_at) as string,
             expiresAt: row.expires_at,
             createdAt: row.created_at,
+            priority: row.priority ?? "normal",
+            featured_image_url: row.featured_image_url ?? undefined,
+            featured_image_alt: row.featured_image_alt ?? undefined,
+            media: row.media ?? undefined,
           }))
           .filter(
             (a) =>

@@ -19,108 +19,101 @@ export function MediaGallery({
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
-  // Combine featured image + media gallery
+  // Combine featured image + media images into one flat list for lightbox navigation
   const allImages = [
-    ...(featured_image ? [{ id: "featured", url: featured_image, alt: featured_image_alt || "Featured image" }] : []),
-    ...(media?.filter((m) => m.type === "image") || []),
+    ...(featured_image
+      ? [{ id: "featured", url: featured_image, alt: featured_image_alt || "Imagen destacada" }]
+      : []),
+    ...(media?.filter((m) => m.type === "image") ?? []),
   ];
-
-  const videos = media?.filter((m) => m.type === "video") || [];
 
   if (!featured_image && !media?.length) return null;
 
-  // Featured variant: full-width hero image
+  const openLightbox = (index: number) => {
+    setSelectedImageIndex(index);
+    setLightboxOpen(true);
+  };
+
+  // ── Build grid content (no early returns — lightbox must render alongside) ──
+
+  let gridContent: React.ReactNode = null;
+
   if (variant === "featured" && featured_image) {
-    return (
+    gridContent = (
       <div className="relative w-full h-80 bg-muted overflow-hidden rounded-lg">
         <img
           src={featured_image}
-          alt={featured_image_alt || "Featured image"}
+          alt={featured_image_alt || "Imagen destacada"}
           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-zoom-in"
-          onClick={() => {
-            setSelectedImageIndex(0);
-            setLightboxOpen(true);
-          }}
+          onClick={() => openLightbox(0)}
         />
       </div>
     );
-  }
-
-  // Card variant: responsive grid layout
-  if (variant === "card") {
-    // Single image: full width
+  } else if (variant === "card") {
     if (allImages.length === 1) {
-      return (
-        <div className="w-full overflow-hidden rounded-lg bg-muted">
+      // Single image — full width, no rounding (card handles it)
+      gridContent = (
+        <div className="w-full bg-muted overflow-hidden">
           <img
             src={allImages[0].url}
-            alt={allImages[0].alt || "Announcement media"}
-            className="w-full h-auto max-h-96 object-cover hover:opacity-90 transition-opacity cursor-pointer"
-            onClick={() => {
-              setSelectedImageIndex(0);
-              setLightboxOpen(true);
-            }}
+            alt={allImages[0].alt || "Imagen del anuncio"}
+            className="w-full max-h-[500px] object-cover cursor-zoom-in hover:opacity-95 transition-opacity"
+            onClick={() => openLightbox(0)}
           />
         </div>
       );
-    }
-
-    // Two images: side by side
-    if (allImages.length === 2) {
-      return (
-        <div className="grid grid-cols-2 gap-2 w-full">
+    } else if (allImages.length === 2) {
+      // Two images — side by side
+      gridContent = (
+        <div className="grid grid-cols-2 gap-0.5 w-full bg-muted">
           {allImages.map((img, idx) => (
-            <div key={img.id || idx} className="overflow-hidden rounded-lg bg-muted">
+            <div key={img.id || idx} className="overflow-hidden">
               <img
                 src={img.url}
-                alt={img.alt || "Announcement media"}
-                className="w-full h-40 object-cover hover:opacity-90 transition-opacity cursor-pointer"
-                onClick={() => {
-                  setSelectedImageIndex(idx);
-                  setLightboxOpen(true);
-                }}
+                alt={img.alt || "Imagen del anuncio"}
+                className="w-full h-56 object-cover cursor-zoom-in hover:opacity-95 transition-opacity"
+                onClick={() => openLightbox(idx)}
               />
             </div>
           ))}
         </div>
       );
-    }
-
-    // Three or more images: grid with first image larger
-    if (allImages.length >= 3) {
-      return (
-        <div className="grid grid-cols-2 gap-2 w-full">
+    } else if (allImages.length >= 3) {
+      // Three or more — asymmetric grid: first image large, rest stacked
+      gridContent = (
+        <div className="grid grid-cols-2 gap-0.5 w-full bg-muted">
+          {/* First image — tall */}
           <div
-            className="col-span-1 row-span-2 overflow-hidden rounded-lg bg-muted cursor-pointer"
-            onClick={() => {
-              setSelectedImageIndex(0);
-              setLightboxOpen(true);
-            }}
+            className="overflow-hidden cursor-zoom-in"
+            style={{ gridRow: "span 2" }}
+            onClick={() => openLightbox(0)}
           >
             <img
               src={allImages[0].url}
-              alt={allImages[0].alt || "Announcement media"}
-              className="w-full h-full object-cover hover:opacity-90 transition-opacity"
+              alt={allImages[0].alt || "Imagen del anuncio"}
+              className="w-full h-full object-cover hover:opacity-95 transition-opacity"
+              style={{ minHeight: "224px" }}
             />
           </div>
 
+          {/* Second + third images */}
           {allImages.slice(1, 3).map((img, idx) => (
             <div
               key={img.id || idx}
-              className="overflow-hidden rounded-lg bg-muted cursor-pointer relative"
-              onClick={() => {
-                setSelectedImageIndex(idx + 1);
-                setLightboxOpen(true);
-              }}
+              className="overflow-hidden cursor-zoom-in relative"
+              onClick={() => openLightbox(idx + 1)}
             >
               <img
                 src={img.url}
-                alt={img.alt || "Announcement media"}
-                className="w-full h-24 object-cover hover:opacity-90 transition-opacity"
+                alt={img.alt || "Imagen del anuncio"}
+                className="w-full h-28 object-cover hover:opacity-95 transition-opacity"
               />
+              {/* "+N more" overlay on the last visible cell */}
               {idx === 1 && allImages.length > 3 && (
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                  <span className="text-white font-semibold">+{allImages.length - 3}</span>
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                  <span className="text-white text-lg font-bold">
+                    +{allImages.length - 3}
+                  </span>
                 </div>
               )}
             </div>
@@ -130,67 +123,74 @@ export function MediaGallery({
     }
   }
 
-  // Lightbox overlay
-  {
-    lightboxOpen && selectedImageIndex !== null && (
+  // ── Lightbox ──
+
+  const lightbox = lightboxOpen && selectedImageIndex !== null && (
+    <div
+      className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4"
+      onClick={() => setLightboxOpen(false)}
+    >
       <div
-        className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
-        onClick={() => setLightboxOpen(false)}
+        className="relative max-w-5xl max-h-[90vh] flex items-center justify-center"
+        onClick={(e) => e.stopPropagation()}
       >
-        <div className="relative max-w-4xl max-h-[90vh] flex items-center justify-center">
-          <img
-            src={allImages[selectedImageIndex]?.url || ""}
-            alt={allImages[selectedImageIndex]?.alt || "Full size image"}
-            className="max-w-full max-h-[90vh] object-contain rounded-lg"
-            onClick={(e) => e.stopPropagation()}
-          />
+        <img
+          src={allImages[selectedImageIndex]?.url ?? ""}
+          alt={allImages[selectedImageIndex]?.alt ?? "Imagen"}
+          className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
+        />
 
-          {/* Navigation buttons */}
-          {allImages.length > 1 && (
-            <>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedImageIndex((prev) => (prev === 0 ? allImages.length - 1 : (prev ?? 0) - 1));
-                }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white rounded-full p-2 transition-all"
-                aria-label="Previous image"
-              >
-                ←
-              </button>
+        {/* Prev / Next */}
+        {allImages.length > 1 && (
+          <>
+            <button
+              onClick={() =>
+                setSelectedImageIndex((prev) =>
+                  prev === 0 ? allImages.length - 1 : (prev ?? 0) - 1,
+                )
+              }
+              className="absolute left-[-56px] top-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 hover:bg-white/40 text-white rounded-full flex items-center justify-center transition-all text-lg"
+              aria-label="Imagen anterior"
+            >
+              ←
+            </button>
+            <button
+              onClick={() =>
+                setSelectedImageIndex((prev) =>
+                  prev === allImages.length - 1 ? 0 : (prev ?? 0) + 1,
+                )
+              }
+              className="absolute right-[-56px] top-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 hover:bg-white/40 text-white rounded-full flex items-center justify-center transition-all text-lg"
+              aria-label="Siguiente imagen"
+            >
+              →
+            </button>
+          </>
+        )}
 
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedImageIndex((prev) => (prev === allImages.length - 1 ? 0 : (prev ?? 0) + 1));
-                }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white rounded-full p-2 transition-all"
-                aria-label="Next image"
-              >
-                →
-              </button>
-            </>
-          )}
+        {/* Close */}
+        <button
+          onClick={() => setLightboxOpen(false)}
+          className="absolute top-[-48px] right-0 w-9 h-9 bg-white/20 hover:bg-white/40 text-white rounded-full flex items-center justify-center transition-all"
+          aria-label="Cerrar"
+        >
+          ✕
+        </button>
 
-          {/* Close button */}
-          <button
-            onClick={() => setLightboxOpen(false)}
-            className="absolute top-4 right-4 bg-white/20 hover:bg-white/40 text-white rounded-full p-2 transition-all"
-            aria-label="Close"
-          >
-            ✕
-          </button>
-
-          {/* Image counter */}
-          {allImages.length > 1 && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white px-3 py-1 rounded-full text-sm">
-              {(selectedImageIndex ?? 0) + 1} / {allImages.length}
-            </div>
-          )}
-        </div>
+        {/* Counter */}
+        {allImages.length > 1 && (
+          <div className="absolute bottom-[-40px] left-1/2 -translate-x-1/2 bg-black/60 text-white px-3 py-1 rounded-full text-sm">
+            {(selectedImageIndex ?? 0) + 1} / {allImages.length}
+          </div>
+        )}
       </div>
-    )
-  }
+    </div>
+  );
 
-  return null;
+  return (
+    <>
+      {gridContent}
+      {lightbox}
+    </>
+  );
 }
